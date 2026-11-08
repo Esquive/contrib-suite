@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#eef3ea" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141b1f" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://esquive.github.io/contrib-suite/">
+<link rel="icon" id="favicon" href="data:,">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Contrib Suite">
@@ -57,6 +58,48 @@
     --lamp:#f0bd62; --dusk:#89aee0; --warn:#e8846a; --onleaf:#0f1a16;
     --shadow: 0 1px 0 rgba(0,0,0,.25);
   }
+  :root[data-style="christmas"]{
+    --sky:#e7eef0; --leaf-0:#e3e7e3; --leaf-1:#bad5b3; --leaf-2:#6ea771; --leaf-3:#c05a4a; --leaf-4:#8f2d2b;
+    --lamp:#cf9f33; --onleaf:#fff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root[data-style="christmas"]:not([data-theme="light"]){
+      --sky:#16222a; --leaf-0:#232b2d; --leaf-1:#31604a; --leaf-2:#4e9565; --leaf-3:#b8544b; --leaf-4:#e68a74;
+      --lamp:#f0c96a; --onleaf:#101a16;
+    }
+  }
+  :root[data-theme="dark"][data-style="christmas"]{
+    --sky:#16222a; --leaf-0:#232b2d; --leaf-1:#31604a; --leaf-2:#4e9565; --leaf-3:#b8544b; --leaf-4:#e68a74;
+    --lamp:#f0c96a; --onleaf:#101a16;
+  }
+  :root[data-style="latenight"]{
+    --sky:#efe8e0; --leaf-0:#e6e2da; --leaf-1:#e0c590; --leaf-2:#cb9750; --leaf-3:#9a5f36; --leaf-4:#5c3a52;
+    --lamp:#8a6fb0; --onleaf:#fff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root[data-style="latenight"]:not([data-theme="light"]){
+      --sky:#1e1a20; --leaf-0:#272429; --leaf-1:#4b3a26; --leaf-2:#8a6630; --leaf-3:#c38c46; --leaf-4:#e8b86f;
+      --lamp:#b79be0; --onleaf:#1a1118;
+    }
+  }
+  :root[data-theme="dark"][data-style="latenight"]{
+    --sky:#1e1a20; --leaf-0:#272429; --leaf-1:#4b3a26; --leaf-2:#8a6630; --leaf-3:#c38c46; --leaf-4:#e8b86f;
+    --lamp:#b79be0; --onleaf:#1a1118;
+  }
+  :root[data-style="swing"]{
+    --sky:#e8eaf0; --leaf-0:#e4e6ea; --leaf-1:#c3cfe2; --leaf-2:#8095bd; --leaf-3:#4d5f92; --leaf-4:#2b3566;
+    --lamp:#c89a3c; --onleaf:#fff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root[data-style="swing"]:not([data-theme="light"]){
+      --sky:#171b26; --leaf-0:#23262e; --leaf-1:#333f63; --leaf-2:#4f6396; --leaf-3:#7f93cb; --leaf-4:#bcc9ec;
+      --lamp:#e0b45c; --onleaf:#141726;
+    }
+  }
+  :root[data-theme="dark"][data-style="swing"]{
+    --sky:#171b26; --leaf-0:#23262e; --leaf-1:#333f63; --leaf-2:#4f6396; --leaf-3:#7f93cb; --leaf-4:#bcc9ec;
+    --lamp:#e0b45c; --onleaf:#141726;
+  }
   *,*::before,*::after{ box-sizing: inherit; }
   html,body{ margin:0; }
   html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
@@ -66,12 +109,34 @@
     font-family: "Zen Maru Gothic", ui-rounded, "Hiragino Maru Gothic ProN", "Segoe UI", system-ui, sans-serif;
     line-height: 1.6; -webkit-font-smoothing: antialiased;
   }
+  .scenery{ position:absolute; top:-4px; right:-6px; z-index:0; pointer-events:none;
+            color:var(--ink); opacity:.13; transition:opacity .4s ease; }
+  .scene{ display:none; height:clamp(104px, 15vw, 172px); width:auto; }
+  .scene[data-for="daydream"]{ display:block; }
+  :root[data-style="swing"] .scene{ display:none; }
+  :root[data-style="swing"] .scene[data-for="swing"]{ display:block; }
+  :root[data-style="latenight"] .scene{ display:none; }
+  :root[data-style="latenight"] .scene[data-for="latenight"]{ display:block; }
+  :root[data-style="christmas"] .scene{ display:none; }
+  :root[data-style="christmas"] .scene[data-for="christmas"]{ display:block; }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .scenery{ opacity:.17; } }
+  :root[data-theme="dark"] .scenery{ opacity:.17; }
+  @media (max-width: 760px){ .scenery{ opacity:.09; } .scene{ height:84px; } }
+  .wrap{ position:relative; z-index:1; }
   .wrap{ max-width: 1020px; margin: 0 auto; padding: 28px 18px 64px; }
 
-  header.masthead{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+  header.masthead{ position:relative; z-index:1; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
   .wordmark{ font-size: clamp(30px, 6vw, 48px); font-weight:700; line-height:1; margin:0; letter-spacing:.005em; }
   .wordmark em{ font-style:normal; color: var(--leaf-3); }
-  .tagline{ margin:.55em 0 0; font-size:15px; color:var(--muted); max-width:46ch; }
+  .cap{ position:relative; display:inline-block; }
+  .hat{ display:none; position:absolute; width:.72em; height:.72em; top:-.42em; left:-.16em;
+        transform:rotate(-14deg); transform-origin:bottom left; pointer-events:none;
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,.18)); }
+  :root[data-style="christmas"] .hat{ display:block; }
+  #snow{ display:none; position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:60; }
+  :root[data-style="christmas"] #snow{ display:block; }
+  @media (prefers-reduced-motion: reduce){ :root[data-style="christmas"] #snow{ display:none; } }
+  .tagline{ margin:.55em 0 0; font-size:15px; color:var(--muted); max-width:42ch; }
   .themebtn{ border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:999px; padding:6px 13px; font:inherit; font-size:13px; cursor:pointer; }
   .themebtn:hover{ color:var(--ink); }
 
@@ -164,11 +229,138 @@
 </style>
 </head>
 <body>
+<canvas id="snow" aria-hidden="true"></canvas>
 <div class="wrap">
+<div class="scenery" aria-hidden="true">
+  <svg class="scene" data-for="daydream" viewBox="20 55 430 240" aria-hidden="true" fill="none"
+       stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(20,20)">
+    <!-- body: straight spine on the left, bent side curving out right -->
+    <path d="M40 250 L40 60 L246 60 C308 60 344 92 342 132 C340 176 296 206 236 218
+    C196 226 150 234 118 244 C96 250 70 250 40 250 Z"/>
+    <!-- lid seam -->
+    <path d="M40 84 L240 84 C290 84 318 108 316 136 C314 166 278 188 230 198
+    C194 205 152 214 120 224" opacity=".45"/>
+    <!-- keyboard along the spine -->
+    <rect x="12" y="62" width="26" height="186" rx="3"/>
+    <g opacity=".75">
+    <path d="M12 86 H38 M12 110 H38 M12 134 H38 M12 158 H38 M12 182 H38 M12 206 H38 M12 230 H38"/>
+    </g>
+    <g fill="currentColor" opacity=".55" stroke="none">
+    <rect x="26" y="74" width="12" height="9" rx="1.5"/>
+    <rect x="26" y="98" width="12" height="9" rx="1.5"/>
+    <rect x="26" y="146" width="12" height="9" rx="1.5"/>
+    <rect x="26" y="170" width="12" height="9" rx="1.5"/>
+    <rect x="26" y="194" width="12" height="9" rx="1.5"/>
+    </g>
+    <!-- a couple of notes drifting off -->
+    <g transform="translate(356,70)">
+    <ellipse cx="0" cy="26" rx="9" ry="6.5" transform="rotate(-20)"/>
+    <path d="M8 22 L10 -4"/>
+    <ellipse cx="44" cy="4" rx="7.5" ry="5.5" transform="rotate(-20 44 4)"/>
+    <path d="M50 0 L52 -22"/>
+    </g>
+    </g>
+  </svg>
+  <svg class="scene" data-for="swing" viewBox="455 15 355 310" aria-hidden="true" fill="none"
+       stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(440,20)">
+    <!-- double bass -->
+    <g transform="translate(40,0)">
+    <path d="M78 86 C100 86 114 102 113 122 C112 138 102 146 98 156
+    C93 168 126 176 126 204 C126 232 105 250 78 250
+    C51 250 30 232 30 204 C30 176 63 168 58 156
+    C54 146 44 138 43 122 C42 102 56 86 78 86 Z"/>
+    <path d="M72 86 L72 22"/><path d="M84 86 L84 22"/>
+    <path d="M72 22 C64 12 76 0 86 6 C95 11 94 24 84 24"/>
+    <g opacity=".55">
+    <path d="M68 244 L68 92"/><path d="M75 244 L75 92"/><path d="M82 244 L82 92"/><path d="M88 240 L88 94"/>
+    </g>
+    <path d="M48 196 C44 208 46 220 52 228" opacity=".55"/>
+    <path d="M108 196 C112 208 110 220 104 228" opacity=".55"/>
+    <path d="M58 224 H98" opacity=".65"/>
+    </g>
+    <!-- ride cymbal on a stand -->
+    <g transform="translate(196,96)">
+    <ellipse cx="78" cy="22" rx="78" ry="17"/>
+    <ellipse cx="78" cy="19" rx="18" ry="5" opacity=".65"/>
+    <ellipse cx="78" cy="22" rx="48" ry="10" opacity=".35"/>
+    <path d="M78 27 L78 150"/>
+    <path d="M78 150 L48 164 M78 150 L108 164 M78 150 L78 168" opacity=".8"/>
+    </g>
+    </g>
+  </svg>
+  <svg class="scene" data-for="latenight" viewBox="870 110 445 200" aria-hidden="true" fill="none"
+       stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(860,20)">
+    <!-- rhodes -->
+    <g transform="translate(0,60)">
+    <path d="M18 96 L54 44 L250 44 L250 96 Z"/>
+    <rect x="18" y="96" width="232" height="26" rx="4"/>
+    <path d="M18 122 L30 168 M250 122 L238 168"/>
+    <path d="M30 168 L238 168" opacity=".5"/>
+    <g opacity=".7">
+    <path d="M46 96 V122 M74 96 V122 M102 96 V122 M130 96 V122 M158 96 V122 M186 96 V122 M214 96 V122"/>
+    </g>
+    <g fill="currentColor" opacity=".5" stroke="none">
+    <rect x="38" y="96" width="9" height="15" rx="1.5"/>
+    <rect x="66" y="96" width="9" height="15" rx="1.5"/>
+    <rect x="122" y="96" width="9" height="15" rx="1.5"/>
+    <rect x="150" y="96" width="9" height="15" rx="1.5"/>
+    <rect x="178" y="96" width="9" height="15" rx="1.5"/>
+    </g>
+    <path d="M70 60 H234" opacity=".45"/>
+    </g>
+    <!-- hi-hat -->
+    <g transform="translate(300,74)">
+    <ellipse cx="74" cy="56" rx="70" ry="15"/>
+    <ellipse cx="74" cy="74" rx="70" ry="15"/>
+    <ellipse cx="74" cy="53" rx="15" ry="4.5" opacity=".6"/>
+    <ellipse cx="74" cy="56" rx="42" ry="9" opacity=".3"/>
+    <path d="M74 38 L74 30" opacity=".8"/>
+    <path d="M74 79 L74 186"/>
+    <path d="M74 186 L46 200 M74 186 L102 200 M74 186 L74 204" opacity=".8"/>
+    <path d="M52 170 L34 178" opacity=".55"/>
+    </g>
+    </g>
+  </svg>
+  <svg class="scene" data-for="christmas" viewBox="1275 55 330 215" aria-hidden="true" fill="none"
+       stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(1270,20)">
+    <!-- handbell -->
+    <g transform="translate(20,40)">
+    <path d="M58 44 C92 44 112 92 116 148 C117 160 124 166 124 172 L-8 172
+    C-8 166 -1 160 0 148 C4 92 24 44 58 44 Z"/>
+    <path d="M-8 172 C30 184 86 184 124 172" opacity=".7"/>
+    <path d="M58 44 L58 26"/>
+    <path d="M58 26 C44 24 44 6 58 6 C72 6 72 24 58 26 Z"/>
+    <circle cx="58" cy="186" r="9" opacity=".8"/>
+    </g>
+    <!-- tambourine -->
+    <g transform="translate(170,96)">
+    <circle cx="76" cy="76" r="72"/>
+    <circle cx="76" cy="76" r="58" opacity=".55"/>
+    <g opacity=".8">
+    <ellipse cx="76" cy="4" rx="11" ry="7"/>
+    <ellipse cx="139" cy="40" rx="11" ry="7" transform="rotate(60 139 40)"/>
+    <ellipse cx="139" cy="112" rx="11" ry="7" transform="rotate(120 139 112)"/>
+    <ellipse cx="76" cy="148" rx="11" ry="7"/>
+    <ellipse cx="13" cy="112" rx="11" ry="7" transform="rotate(60 13 112)"/>
+    <ellipse cx="13" cy="40" rx="11" ry="7" transform="rotate(120 13 40)"/>
+    </g>
+    </g>
+    </g>
+  </svg>
+</div>
 
   <header class="masthead">
     <div>
-      <h1 class="wordmark">Contrib <em>Suite</em></h1>
+      <h1 class="wordmark"><span class="cap">C<svg class="hat" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 16.5C4 7.5 10 2 17.2 3.1 14.2 7 12.6 11.3 12.2 16.5Z" fill="#c0392b"/>
+        <path d="M11.6 6.2C13 4.6 15 3.3 17.2 3.1 16.1 4.5 15.2 6 14.5 7.5Z" fill="#9c2c20"/>
+        <rect x="1.8" y="15.2" width="12.4" height="4.6" rx="2.3" fill="#fdfdfb"/>
+        <circle cx="18.2" cy="3.4" r="3.1" fill="#fdfdfb"/>
+      </svg></span>ontrib <em>Suite</em></h1>
       <p class="tagline">A year of contributions, played as a slow pentatonic daydream. One week per bar, Sunday on top — and the quiet weeks hurry along.</p>
     </div>
     <button class="themebtn" id="theme" type="button">Night mode</button>
@@ -196,6 +388,14 @@
   <div class="transport">
     <button class="play" id="play" type="button"><span class="tri"></span><span>Play the year</span></button>
     <label class="field">Tempo <input type="range" id="bpm" min="52" max="132" value="84"><span id="bpmout">84</span></label>
+    <label class="field">Style
+      <select id="style">
+        <option value="daydream">Daydream</option>
+        <option value="swing" id="swingopt">Jazz</option>
+        <option value="latenight" id="lateopt">Late night</option>
+        <option value="christmas" id="xmasopt">Christmas</option>
+      </select>
+    </label>
     <label class="field">Key
       <select id="key">
         <option value="D">D major — open and hopeful</option>
@@ -257,7 +457,7 @@
         <button class="ghost" data-demo="sparse" type="button">A few good days</button>
         <button class="ghost" id="revert" type="button" disabled>Undo my edits</button>
       </div>
-      <p class="note">Rows become pitch — Sunday is the highest voice, Saturday the lowest. Shade becomes loudness, and the deepest green adds a bell above the note. A busy week fills a whole bar; a week with one or two commits takes half of one; an empty week passes in a single beat. Underneath it all, a bass and a string pad keep an eight-bar progression turning without pause, so a gap in the year drifts rather than stops — and when nothing is happening up top, the pad picks out a quiet figure of its own.</p>
+      <p class="note"><strong>Daydream</strong> is a five-note scale with soft piano and strings. More styles arrive through the year, each with its own instruments and harmony. Rows become pitch — Sunday is the highest voice, Saturday the lowest. Shade becomes loudness, and the deepest green adds a bell above the note. A busy week fills a whole bar; a week with one or two commits takes half of one; an empty week passes in a single beat. Underneath it all, a bass and a string pad keep an eight-bar progression turning without pause, so a gap in the year drifts rather than stops — and when nothing is happening up top, the pad picks out a quiet figure of its own.</p>
     </section>
 
     <section class="panel" id="exportpanel" hidden>
@@ -649,27 +849,208 @@
          prog:[["D#2",["D#3","G3","A#3"]],["C2",["C3","D#3","G3"]],["G#1",["G#2","C3","D#3"]],["A#1",["A#2","D3","F3"]],
                ["G1",["G2","A#2","D3"]],["C2",["C3","D#3","G3"]],["G#1",["G#2","C3","D#3"]],["A#1",["A#2","D3","F3"]]] }
   };
+  // A carol wants the full diatonic scale and real seventh chords, so the
+  // festive key table is built from intervals rather than typed out by hand.
+  const CHROM = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+  function toMidi(n){ const m = /^([A-G]#?)(-?\d)$/.exec(n); return CHROM.indexOf(m[1]) + (+m[2] + 1) * 12; }
+  function toName(m){ return CHROM[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1); }
+  function buildKey(rootName, minor, shape){
+    const r = toMidi(rootName);
+    const steps = minor ? [0,2,3,5,7,8,10] : [0,2,4,5,7,9,11];
+    const deg = i => r + 12 * Math.floor(i / 7) + steps[((i % 7) + 7) % 7];
+    const late = shape === "latenight", swing = shape === "swing", jazzy = late || swing;
+    // Peal: chord tones and the sixth over two octaves, so any combination of
+    // rows rings as a chord. Late night: root, 2, 3, 5, 6, 7 and 9 — the degrees a
+    // player actually reaches for, so a run lands on colour notes.
+    const scaleIdx = jazzy ? [0,1,2,4,5,6,8] : [0,2,4,5,7,9,11];
+    const scale = scaleIdx.map(i => toName(deg(i) + (jazzy ? 0 : 12)));
+    // Smooth-soul loop: IVmaj7, III7, vi7, V7 — a descent through the cycle of
+    // fifths where the III is borrowed as a dominant to pull toward the vi.
+    // Swing: a standard's worth of secondary dominants — I, III7, VI7, ii, V7 —
+    // where each borrowed dominant drags the ear onto the next chord.
+    const seq      = swing ? [0,2,5,1,4,0,5,4]
+                   : late  ? [3,2,5,4,3,2,5,4]
+                           : (minor ? [0,3,4,0,5,3,4,0] : [0,5,1,4,0,3,4,0]);
+    const sevenths = jazzy ? [1,1,1,1,1,1,1,1]
+                           : (minor ? [1,1,1,0,0,1,1,0] : [0,1,1,1,0,0,1,0]);
+    const chordOff = jazzy ? -12 : 0, bassOff = jazzy ? -24 : -12;
+    const alter = swing ? [2,5] : late ? [2] : [];
+    const prog = seq.map((d,i) => {
+      const tones = [d, d+2, d+4];
+      if (sevenths[i]) tones.push(d+6);
+      const notes = tones.map(t => toName(deg(t) + chordOff));
+      if (alter.indexOf(((d % 7) + 7) % 7) !== -1) notes[1] = toName(deg(d+2) + chordOff + 1);
+      return [ toName(deg(d) + bassOff), notes ];
+    });
+    return { scale, prog };
+  }
+  const XMAS = { D: buildKey("D3", false), F: buildKey("F3", false), A: buildKey("A2", true), E: buildKey("D#3", false) };
+  const LATE = { D: buildKey("D4", false, "latenight"), F: buildKey("F4", false, "latenight"),
+                 A: buildKey("A3", true, "latenight"),  E: buildKey("D#4", false, "latenight") };
+  const SWING = { D: buildKey("D4", false, "swing"), F: buildKey("F4", false, "swing"),
+                  A: buildKey("A3", true, "swing"),  E: buildKey("D#4", false, "swing") };
+
   const VEL = [0, .20, .32, .46, .62];
   const up = n => { const m = /^([A-G]#?)(\d)$/.exec(n); return m ? m[1] + (+m[2] + 1) : n; };
 
-  let audio = null;
-  function buildAudio(){
-    if (audio) return audio;
-    const out = new Tone.Volume(-3).toDestination();
-    const reverb = new Tone.Reverb({ decay:5.5, preDelay:0.03, wet:0.34 }).connect(out);
+  let fx = null, voiceSets = {}, audio = null;
+  function getFX(){
+    if (fx) return fx;
+    const limiter = new Tone.Limiter(-1.5).toDestination();
+    const out = new Tone.Volume(-5).connect(limiter);
+    const reverb = new Tone.Reverb({ decay:3.4, preDelay:0.03, wet:0.28 }).connect(out);
     const chorus = new Tone.Chorus(0.5, 3.2, 0.35).start().connect(reverb);
-    const voice = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"triangle"}, envelope:{attack:0.006, decay:1.25, sustain:0.04, release:1.7} }).connect(reverb);
-    voice.volume.value = -10;
-    const bell = new Tone.PolySynth(Tone.FMSynth, { harmonicity:3.01, modulationIndex:7,
-      envelope:{attack:0.002, decay:1.8, sustain:0, release:1.4}, modulationEnvelope:{attack:0.002, decay:0.25, sustain:0, release:0.2} }).connect(reverb);
-    bell.volume.value = -22;
-    const pad = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"sine"}, envelope:{attack:1.0, decay:0.6, sustain:0.65, release:3.0} }).connect(chorus);
-    pad.volume.value = -23;
-    const bass = new Tone.Synth({ oscillator:{type:"sine"}, envelope:{attack:0.03, decay:0.7, sustain:0.25, release:1.3} }).connect(reverb);
-    bass.volume.value = -15;
-    audio = { out, voice, bell, pad, bass };
-    return audio;
+    fx = { out, reverb, chorus };
+    return fx;
   }
+  function buildVoices(style){
+    if (voiceSets[style]) return voiceSets[style];
+    const { out, reverb, chorus } = getFX();
+    let v;
+    if (style === "christmas"){
+      // Three real bell timbres rather than one synth across the range. A bell's
+      // partials are inharmonic, so harmonicity is deliberately off whole numbers;
+      // bigger bells get a slower strike and a far longer ring.
+      const mkBell = (dec, vol) => {
+        const b = new Tone.PolySynth(Tone.Synth, {
+          oscillator:{ type:"triangle" },
+          envelope:{ attack:0.001, decay:dec, sustain:0, release:dec*0.55 }
+        }).connect(reverb);
+        b.volume.value = vol;
+        b.maxPolyphony = 16;
+        return b;
+      };
+      const tower  = mkBell(1.5,  -13);  // the deepest of the three
+      const hand   = mkBell(0.95, -12);  // handbell: round and singing
+      const sleigh = mkBell(0.5,  -14);  // jingle: bright, gone almost at once
+      const voice = hand, bell = sleigh;
+      // Strings, not a sine drone: fat sawtooths behind a low filter, so the
+      // backing reads as an orchestra rather than a games console.
+      const padTone = new Tone.Filter({ frequency: 2400, type:"lowpass", Q: 0.7 }).connect(chorus);
+      const padVib = new Tone.Vibrato({ frequency: 4.6, depth: 0.12 }).connect(padTone);
+      // A flat, unchanging sustain is an organ. Strings bloom and then settle
+      // back, so the note decays well below its peak and stays there.
+      const pad = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"sawtooth"},
+        envelope:{attack:0.5, decay:1.3, sustain:0.38, release:1.9} }).connect(padVib);
+      pad.volume.value = -19;
+      pad.maxPolyphony = 12;
+      // Pizzicato cello on the bass, which gives a carol its walk
+      const bass = new Tone.MonoSynth({ oscillator:{type:"sawtooth"},
+        envelope:{attack:0.004, decay:0.4, sustain:0, release:0.5},
+        filterEnvelope:{attack:0.004, decay:0.18, sustain:0, baseFrequency:180, octaves:2.6} }).connect(reverb);
+      bass.volume.value = -11;
+      // Real sleigh bells are a fistful of tiny metal bells, not filtered noise.
+      // Two detuned metal voices struck together give the cluster its jingle.
+      // Tambourine, entirely unpitched: jingles are a narrow band of noise,
+      // the head is a short low thud. Nothing here can be mistaken for a note.
+      const tambBody = new Tone.Filter({ frequency: 6000, type:"bandpass", Q: 0.8 }).connect(reverb);
+      const tamb = new Tone.NoiseSynth({ noise:{type:"white"},
+        envelope:{ attack:0.001, decay:0.05, sustain:0 } }).connect(tambBody);
+      tamb.volume.value = -25;
+      const headBody = new Tone.Filter({ frequency: 420, type:"lowpass" }).connect(reverb);
+      const head = new Tone.NoiseSynth({ noise:{type:"pink"},
+        envelope:{ attack:0.001, decay:0.1, sustain:0 } }).connect(headBody);
+      head.volume.value = -24;
+      v = { kind:"christmas", out, voice, bell, pad, bass, comp:null, ride:null, hat:null, kick:null,
+            shaker:null, jingle:null, shake:null, tamb, head, bells:[tower, hand, sleigh] };
+
+    } else if (style === "swing"){
+      // Acoustic piano, as close as subtraction gets: a saw whose filter shuts
+      // far faster than its amplitude, which is what a struck string does.
+      // A real grand needs samples; this is an honest impression of one.
+      const dry = new Tone.Gain(1).connect(out);
+      const send = new Tone.Gain(0.18).connect(reverb);   // a room, not a hall
+      const mkPiano = (vol, dec) => {
+        const pn = new Tone.PolySynth(Tone.MonoSynth, {
+          oscillator:{ type:"sawtooth" },
+          envelope:{ attack:0.002, decay:dec, sustain:0.03, release:0.8 },
+          filter:{ type:"lowpass", rolloff:-24, Q:1.2 },
+          filterEnvelope:{ attack:0.001, decay:0.26, sustain:0.04, release:0.35,
+                           baseFrequency: 480, octaves: 3.6 }
+        });
+        pn.connect(dry); pn.connect(send);
+        pn.volume.value = vol; pn.maxPolyphony = 12;
+        return pn;
+      };
+      const voice = mkPiano(-16, 1.6);   // right hand
+      const comp  = mkPiano(-24, 1.0);   // left hand, stabbing between phrases
+      const bell = voice;
+      // Upright bass: thump at the front, gone by the next beat
+      const bassBody = new Tone.Filter({ frequency: 820, type:"lowpass" }).connect(dry);
+      const bass = new Tone.MonoSynth({ oscillator:{type:"triangle"},
+        envelope:{attack:0.006, decay:0.5, sustain:0.08, release:0.4},
+        filterEnvelope:{attack:0.004, decay:0.18, sustain:0.06, baseFrequency:170, octaves:2.3} }).connect(bassBody);
+      bass.volume.value = -9;
+      // Ride cymbal doing the work, brushed foot on two and four
+      const rideBody = new Tone.Filter({ frequency: 7600, type:"bandpass", Q: 0.5 }).connect(send);
+      const ride = new Tone.NoiseSynth({ noise:{type:"white"},
+        envelope:{ attack:0.002, decay:0.3, sustain:0 } }).connect(rideBody);
+      ride.volume.value = -25;
+      const hatBody = new Tone.Filter({ frequency: 4200, type:"bandpass", Q: 1.0 }).connect(dry);
+      const hat = new Tone.NoiseSynth({ noise:{type:"pink"},
+        envelope:{ attack:0.001, decay:0.09, sustain:0 } }).connect(hatBody);
+      hat.volume.value = -26;
+      v = { kind:"swing", out, voice, bell, pad:null, bass, comp, ride, hat, kick:null,
+            shaker:null, jingle:null, shake:null, tamb:null, head:null, bells:null };
+    } else if (style === "latenight"){
+      const dry = new Tone.Gain(1).connect(out);
+      const send = new Tone.Gain(0.2).connect(reverb);
+      // Electric piano. The tine is FM, but with a WHOLE-NUMBER ratio and a low
+      // index: non-integer ratios and a high index are what turn this into a
+      // steel pan. The tremolo is the other half — a Rhodes is never static.
+      const trem = new Tone.Tremolo({ frequency: 4.4, depth: 0.32 }).start();
+      trem.connect(dry); trem.connect(send);
+      const mkRhodes = (vol, dec) => {
+        const r = new Tone.PolySynth(Tone.FMSynth, {
+          harmonicity: 2, modulationIndex: 4.2,
+          oscillator:{ type:"sine" }, modulation:{ type:"sine" },
+          envelope:{ attack:0.004, decay:dec, sustain:0.1, release:1.3 },
+          modulationEnvelope:{ attack:0.002, decay:0.14, sustain:0.02, release:0.2 }
+        }).connect(trem);
+        r.volume.value = vol; r.maxPolyphony = 14;
+        return r;
+      };
+      const voice = mkRhodes(-13, 2.2);
+      const comp  = mkRhodes(-21, 1.6);
+      const bell = voice;
+      // Fingered electric bass: round, sustained, no pluck attack
+      const bassBody = new Tone.Filter({ frequency: 700, type:"lowpass" }).connect(dry);
+      const bass = new Tone.MonoSynth({ oscillator:{type:"triangle"},
+        envelope:{attack:0.012, decay:0.5, sustain:0.45, release:0.4},
+        filterEnvelope:{attack:0.01, decay:0.3, sustain:0.3, baseFrequency:140, octaves:2.1} }).connect(bassBody);
+      bass.volume.value = -8;
+      // Kit with a backbeat, not a swung ride
+      const kick = new Tone.MembraneSynth({ pitchDecay:0.03, octaves:5,
+        envelope:{attack:0.001, decay:0.34, sustain:0, release:0.1} }).connect(dry);
+      kick.volume.value = -11;
+      const snareBody = new Tone.Filter({ frequency: 1900, type:"bandpass", Q: 0.7 }).connect(send);
+      const ride = new Tone.NoiseSynth({ noise:{type:"white"},
+        envelope:{ attack:0.001, decay:0.16, sustain:0 } }).connect(snareBody);
+      ride.volume.value = -21;
+      const hatBody = new Tone.Filter({ frequency: 9000, type:"highpass" }).connect(dry);
+      const hat = new Tone.NoiseSynth({ noise:{type:"white"},
+        envelope:{ attack:0.001, decay:0.035, sustain:0 } }).connect(hatBody);
+      hat.volume.value = -27;
+      v = { kind:"latenight", out, voice, bell, pad:null, bass, comp, ride, hat, kick,
+            shaker:null, jingle:null, shake:null, tamb:null, head:null, bells:null };
+    } else {
+      const voice = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"triangle"}, envelope:{attack:0.006, decay:1.25, sustain:0.04, release:1.7} }).connect(reverb);
+      voice.volume.value = -10;
+      const bell = new Tone.PolySynth(Tone.FMSynth, { harmonicity:3.01, modulationIndex:7,
+        envelope:{attack:0.002, decay:1.8, sustain:0, release:1.4}, modulationEnvelope:{attack:0.002, decay:0.25, sustain:0, release:0.2} }).connect(reverb);
+      bell.volume.value = -22;
+      const pad = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"sine"}, envelope:{attack:1.0, decay:0.6, sustain:0.65, release:3.0} }).connect(chorus);
+      pad.volume.value = -23;
+      const bass = new Tone.Synth({ oscillator:{type:"sine"}, envelope:{attack:0.03, decay:0.7, sustain:0.25, release:1.3} }).connect(reverb);
+      bass.volume.value = -15;
+      pad.maxPolyphony = 12;
+      v = { kind:"daydream", out, voice, bell, pad, bass, comp:null, ride:null, hat:null, kick:null,
+            shaker: null, jingle: null, shake: null, tamb: null, head: null, bells: null };
+    }
+    voiceSets[style] = v;
+    return v;
+  }
+  function buildAudio(){ audio = buildVoices(styleEl.value); return audio; }
 
   /* ---------- the plan: variable bar lengths ---------- */
   const compressEl = document.getElementById("compress");
@@ -678,6 +1059,11 @@
   const loopEl = document.getElementById("loop");
   const bpmEl = document.getElementById("bpm"), bpmOut = document.getElementById("bpmout");
   const keyEl = document.getElementById("key");
+  const styleEl = document.getElementById("style");
+  const isXmas = () => styleEl.value === "christmas";
+  const isLate  = () => styleEl.value === "latenight";
+  const isSwing = () => styleEl.value === "swing";
+  const keysNow = () => (isXmas() ? XMAS : isLate() ? LATE : isSwing() ? SWING : KEYS)[keyEl.value];
 
   function buildPlan(){
     const PPQ = Tone.Transport.PPQ, BAR = 4 * PPQ;
@@ -703,17 +1089,128 @@
     return { plan, bars, loopTicks: totalBars * BAR };
   }
 
+  // Tone's monophonic voices refuse an attack that is not strictly later than
+  // the last one, and a thrown error inside a transport callback kills playback
+  // outright. Every mono strike goes through here.
+  const lastHit = new WeakMap();
+  function hit(node, dur, t, vel){
+    const prev = lastHit.get(node);
+    const at = (prev !== undefined && t <= prev) ? prev + 0.004 : t;
+    lastHit.set(node, at);
+    try { node.triggerAttackRelease(dur, at, vel); } catch(_){}
+  }
+  function hitNote(node, note, dur, t, vel){
+    const prev = lastHit.get(node);
+    const at = (prev !== undefined && t <= prev) ? prev + 0.004 : t;
+    lastHit.set(node, at);
+    try { node.triggerAttackRelease(note, dur, at, vel); } catch(_){}
+  }
+
+  // The pad used to re-attack every bar, so a slow swell restarted on every bar
+  // line and the backing pumped. It is held instead, and only moves when the
+  // chord actually changes.
+  let padHeld = null;
+  function holdPad(a, notes, time, vel){
+    const prev = padHeld || [];
+    const release = prev.filter(n => notes.indexOf(n) === -1);
+    const attack  = notes.filter(n => prev.indexOf(n) === -1);
+    try {
+      if (release.length) a.pad.triggerRelease(release, time);
+      // players do not all arrive on the beat at the same millisecond
+      attack.forEach((n, i) => a.pad.triggerAttack(n, time + 0.004 + i*0.021, vel * (0.9 + Math.random()*0.2)));
+    } catch(_){}
+    padHeld = notes.slice();
+  }
+  function dropPad(a){
+    padHeld = null;
+    try { a.pad.releaseAll(); } catch(_){}
+  }
+
   const OSTINATO = [[0,0],[1,1],[1.75,2],[2.5,1],[3.25,2]];
   function playBar(bar, time){
-    const a = audio, K = KEYS[keyEl.value];
+    const a = audio, K = keysNow();
     const beat = 60 / Tone.Transport.bpm.value;
     const chord = K.prog[bar.i % K.prog.length];
-    a.pad.triggerAttackRelease(chord[1], beat * 3.9, time, 0.27);
-    a.bass.triggerAttackRelease(chord[0], beat * 2.3, time + 0.01, 0.5);
-    a.bass.triggerAttackRelease(chord[0], beat * 1.4, time + beat * 2.5, 0.3);
-    if (bar.busy) return;
-    // nothing on the grid here, so the backing carries the tune
+    if (a.kind === "swing"){
+      // Walking bass: root, third, fifth, then a chromatic step into the next
+      // chord — the line that makes a progression feel like it is travelling
+      const next = K.prog[(bar.i + 1) % K.prog.length];
+      const lead = toName(toMidi(next[0]) + (Math.random() < 0.5 ? -1 : 1));
+      [chord[0], chord[1][1], chord[1][2], lead].forEach((n, k) =>
+        hitNote(a.bass, n, beat * 0.6, time + k*beat + (Math.random()-0.5)*0.012, 0.8));
+      // Ride: one, two, the swung and of two, three, four, the swung and of four
+      [[0,0.55],[1,0.4],[1.66,0.3],[2,0.5],[3,0.4],[3.66,0.3]].forEach(([at, v]) =>
+        hit(a.ride, "16n", time + at*beat + (Math.random()-0.5)*0.01, v));
+      [1, 3].forEach(at => hit(a.hat, "16n", time + at*beat, 0.5));
+      // Left hand: short chords, always off the beat
+      const voicing = chord[1].slice(1);
+      [1.66, 3.33].forEach(at => {
+        try {
+          a.comp.triggerAttackRelease(voicing, beat * 0.5,
+            time + at*beat + (Math.random()-0.5)*0.014, 0.32 + Math.random()*0.1);
+        } catch(_){}
+      });
+    } else if (a.kind === "latenight"){
+      // Electric bass: a syncopated figure that sits on the root and pushes
+      // into the next bar, rather than a walking line
+      const next = K.prog[(bar.i + 1) % K.prog.length];
+      const fifth = chord[1][2], lead = toName(toMidi(next[0]) - 2);
+      [[0, chord[0], 0.95], [1.5, chord[0], 0.6], [2.5, fifth, 0.7], [3.5, lead, 0.6]]
+        .forEach(([at, n, v]) => hitNote(a.bass, n, beat * 0.55, time + at*beat + (Math.random()-0.5)*0.008, v));
+      // Backbeat: kick on one and the push before three, snare on two and four
+      hit(a.kick, "8n", time + 0.004, 0.9);
+      hit(a.kick, "8n", time + beat*2.5, 0.65);
+      [1, 3].forEach(at => hit(a.ride, "16n", time + at*beat + (Math.random()-0.5)*0.006, 0.8));
+      for (let e=0;e<8;e++) hit(a.hat, "32n", time + e*beat*0.5, e % 2 ? 0.32 : 0.55);
+      // Comping: soft chords off the beat, the way a left hand fills gaps
+      const voicing = chord[1].slice(1);
+      [1.5, 3.25].forEach(at => {
+        try {
+          a.comp.triggerAttackRelease(voicing, beat * 0.9,
+            time + at*beat + (Math.random()-0.5)*0.012, 0.3 + Math.random()*0.08);
+        } catch(_){}
+      });
+    } else if (a.kind === "christmas"){
+      // strings hold through the bar line; a low root underneath keeps the
+      // pizzicato from leaving holes
+      const cello = toName(toMidi(chord[1][0]) - 12);
+      const violins = chord[1].slice(1, 3).map(n => toName(toMidi(n) + 12));
+      holdPad(a, [cello].concat(chord[1], violins), time, 0.3);
+      // pizzicato on one and three, with a lift onto the fifth before the turn
+      hitNote(a.bass, chord[0], beat * 0.5, time + 0.01, 0.9);
+      hitNote(a.bass, chord[0], beat * 0.5, time + beat * 2, 0.7);
+      if (bar.i % 2 === 1) hitNote(a.bass, chord[1][2], beat * 0.4, time + beat * 3.5, 0.5);
+      // sleigh bells on a swung eighth, accented like a harness in motion
+      // tambourine: jingles shimmer on every eighth, the head is struck on two
+      // and four, where the metal ring comes in on top
+      const shimmer = [0.5,0.24,0.36,0.24,0.46,0.24,0.36,0.28];
+      for (let e=0;e<8;e++){
+        const t = time + e*beat*0.5 + (e % 2 ? beat*0.12 : 0) + (Math.random()-0.5)*0.008;
+        hit(a.tamb, "32n", t, shimmer[e] * (0.88 + Math.random()*0.24));
+        if (e === 2 || e === 6){            // struck on two and four
+          hit(a.head, "16n", t, 0.85);
+          hit(a.tamb, "16n", t + 0.003, 0.9);
+        }
+      }
+    } else {
+      holdPad(a, chord[1], time, 0.26);
+      hitNote(a.bass, chord[0], beat * 2.3, time + 0.01, 0.5);
+      hitNote(a.bass, chord[0], beat * 1.4, time + beat * 2.5, 0.3);
+    }
     const tones = chord[1].map(up), roll = bar.i % 3;
+    if (a.bells){
+      // change-ringing: the same bells, struck in a falling order. A busy bar
+      // keeps two strikes rather than none, so the texture never switches off.
+      const n = bar.busy ? 2 : 4;
+      const vel = bar.busy ? 0.09 : 0.17;
+      for (let k=0;k<n;k++){
+        const note = tones[(tones.length - 1 - ((k + roll) % tones.length))];
+        a.bells[1].triggerAttackRelease(note, "2n",
+          time + k*beat*(bar.busy ? 1.5 : 0.75) + (Math.random()-0.5)*0.012, vel + Math.random()*0.04);
+      }
+      return;
+    }
+    if (bar.busy) return;
     OSTINATO.forEach(([at, which], k) => {
       if (roll === 2 && k === 2) return;
       a.voice.triggerAttackRelease(tones[(which + roll) % tones.length], "8n",
@@ -722,17 +1219,26 @@
   }
 
   function playColumn(p, time){
-    const a = audio, K = KEYS[keyEl.value];
+    const a = audio, K = keysNow();
     const beatSec = 60 / Tone.Transport.bpm.value;
-    const step = beatSec * (p.wide ? 0.5 : 0.25);
+    const step = beatSec * ((a.bells || a.ride) ? 0.5 : (p.wide ? 0.5 : 0.25));
+    const swingPush = a.kind === "swing" ? beatSec*0.165 : (a.kind === "latenight" ? beatSec*0.045 : 0);
 
     p.rows.forEach((r, k) => {
       const lv = levels[idx(p.c, r)];
-      const t = time + k*step + (Math.random()-0.5)*0.014;
-      const note = K.scale[ROWS - 1 - r];
+      const t = time + k*step + ((k % 2) ? swingPush : 0) + (Math.random()-0.5)*0.014;
+      const deg = ROWS - 1 - r;
+      const note = K.scale[deg];
       const vel = Math.min(0.95, VEL[lv] * (0.88 + Math.random()*0.24));
-      a.voice.triggerAttackRelease(note, lv >= 3 ? "4n" : "8n", t, vel);
-      if (lv === 4) a.bell.triggerAttackRelease(up(note), "2n", t + 0.005, 0.45);
+      if (a.bells){
+        // low rows strike the tower bell, middle the handbells, top the small ones
+        const which = deg <= 1 ? 0 : (deg <= 4 ? 1 : 2);
+        a.bells[which].triggerAttackRelease(note, which === 0 ? "2n" : "4n", t, vel * 0.9);
+        if (lv === 4) a.bells[2].triggerAttackRelease(up(note), "2n", t + 0.03, 0.3);
+      } else {
+        a.voice.triggerAttackRelease(note, lv >= 3 ? "4n" : "8n", t, vel);
+        if (lv === 4) a.bell.triggerAttackRelease(up(note), "2n", t + 0.005, 0.45);
+      }
       const el = cells[idx(p.c, r)];
       Tone.Draw.schedule(() => { el.classList.add("ring"); setTimeout(()=>el.classList.remove("ring"), 320); }, t);
     });
@@ -765,13 +1271,18 @@
   async function startPlay(opts){
     opts = opts || {};
     await Tone.start();
+    try { Tone.getContext().lookAhead = 0.2; } catch(_){}
     buildAudio();
     Tone.Transport.stop(); Tone.Transport.cancel(); Tone.Transport.loop = false;
     Tone.Transport.bpm.value = +bpmEl.value;
+    [audio.bass, audio.tamb, audio.head, audio.ride, audio.hat, audio.kick].forEach(n => n && lastHit.delete(n));
+    dropPad(audio);
+    Tone.Transport.swing = 0;
 
     const { plan, bars, loopTicks } = buildPlan();
-    plan.forEach(p => Tone.Transport.schedule(time => playColumn(p, time), p.startTicks + "i"));
-    if (backingEl.checked) bars.forEach(b => Tone.Transport.schedule(time => playBar(b, time), b.startTicks + "i"));
+    const guard = fn => time => { try { fn(time); } catch(err){ console.error("Contrib Suite:", err); } };
+    plan.forEach(p => Tone.Transport.schedule(guard(time => playColumn(p, time)), p.startTicks + "i"));
+    if (backingEl.checked) bars.forEach(b => Tone.Transport.schedule(guard(time => playBar(b, time)), b.startTicks + "i"));
 
     const looping = !opts.noLoop && loopEl.checked;
     if (looping){
@@ -791,7 +1302,12 @@
   function stopPlay(finished){
     playing = false;
     Tone.Transport.stop(); Tone.Transport.cancel(); Tone.Transport.loop = false;
-    if (audio){ audio.voice.releaseAll(); audio.pad.releaseAll(); audio.bell.releaseAll(); audio.bass.triggerRelease(); }
+    if (audio){
+      [audio.voice, audio.bell, audio.comp].concat(audio.bells || [])
+        .forEach(n => { try{ if (n && n.releaseAll) n.releaseAll(); }catch(_){} });
+      try{ audio.bass.triggerRelease(); }catch(_){}
+      dropPad(audio);
+    }
     clearMarks(); setPlayBtn(false);
     if (!recording) setReadout(finished ? "That’s the whole year" : "Stopped");
   }
@@ -805,6 +1321,45 @@
     if (playing) Tone.Transport.bpm.rampTo(+bpmEl.value, 0.3);
   });
   [compressEl, backingEl].forEach(el => el.addEventListener("change", () => { if (playing){ stopPlay(false); startPlay(); } }));
+
+  const STYLE_BPM = { daydream: 84, swing: 142, latenight: 98, christmas: 100 };
+  function applyStyle(){
+    document.documentElement.dataset.style = styleEl.value;
+    bpmEl.value = STYLE_BPM[styleEl.value]; bpmOut.textContent = bpmEl.value;
+    try{ localStorage.setItem("contrib-suite-style", styleEl.value); }catch(_){}
+    setFavicon(isXmas());
+    if (isXmas()) startSnow(); else stopSnow();
+  }
+  styleEl.addEventListener("change", () => {
+    const wasPlaying = playing;
+    if (playing) stopPlay(false);
+    applyStyle();
+    if (wasPlaying) startPlay();
+  });
+  try{
+    const st = localStorage.getItem("contrib-suite-style");
+    if (["christmas","daydream","latenight","swing"].indexOf(st) !== -1) styleEl.value = st;
+  }catch(_){}
+
+  // Styles arrive on a schedule and are absent from the picker until their
+  // date. Christmas comes and goes with the season instead. Every gate lifts
+  // from the address bar for previews and demos.
+  (function gate(){
+    const now = new Date(), hash = location.hash, all = hash === "#unlock";
+    [ { el:"lateopt",  open: hash === "#latenight", from: new Date(2027, 0, 1) },
+      { el:"swingopt", open: hash === "#jazz",      from: new Date(2027, 1, 1) }
+    ].forEach(o => {
+      const el = document.getElementById(o.el);
+      if (!el || all || o.open || now >= o.from) return;
+      el.remove();
+    });
+    const m = now.getMonth(), day = now.getDate();
+    const inSeason = (m === 11 && day >= 1) || (m === 0 && day <= 6);
+    const x = document.getElementById("xmasopt");
+    if (x && !(all || inSeason || hash === "#christmas")) x.remove();
+    const picked = styleEl.selectedOptions[0];
+    if (!picked || picked.disabled || !styleEl.value) styleEl.value = "daydream";
+  })();
 
   /* ---------- export ---------- */
   const exportPanel = document.getElementById("exportpanel");
@@ -870,6 +1425,92 @@
     startPlay({ noLoop: true, onEnd: finish });
   });
 
+  /* ---------- favicon ---------- */
+  const faviconEl = document.getElementById("favicon");
+  function setFavicon(festive){
+    const bg = festive ? "#b8372c" : "#4e9a60";
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
+      '<rect width="32" height="32" rx="7" fill="' + bg + '"/>' +
+      '<g fill="#ffffff">' +
+        '<rect x="6" y="7" width="5" height="5" rx="1.4" opacity=".55"/>' +
+        '<rect x="13.5" y="7" width="5" height="5" rx="1.4" opacity=".85"/>' +
+        '<rect x="21" y="7" width="5" height="5" rx="1.4" opacity=".4"/>' +
+        '<rect x="6" y="14.5" width="5" height="5" rx="1.4" opacity=".85"/>' +
+        '<rect x="13.5" y="14.5" width="5" height="5" rx="1.4" opacity=".4"/>' +
+        '<rect x="21" y="14.5" width="5" height="5" rx="1.4" opacity=".7"/>' +
+        '<rect x="6" y="22" width="5" height="5" rx="1.4" opacity=".35"/>' +
+        '<rect x="13.5" y="22" width="5" height="5" rx="1.4" opacity=".7"/>' +
+        '<rect x="21" y="22" width="5" height="5" rx="1.4" opacity=".9"/>' +
+      '</g></svg>';
+    faviconEl.href = "data:image/svg+xml," + encodeURIComponent(svg);
+  }
+
+  /* ---------- snow ---------- */
+  const snowCanvas = document.getElementById("snow");
+  const snowCtx = snowCanvas.getContext("2d");
+  let flakes = [], snowRAF = null, snowSize = [0,0];
+  function sizeSnow(){
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = window.innerWidth, h = window.innerHeight;
+    snowSize = [w, h];
+    snowCanvas.width = Math.round(w * dpr);
+    snowCanvas.height = Math.round(h * dpr);
+    snowCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function seedSnow(){
+    const [w,h] = snowSize;
+    const n = Math.round(Math.min(70, Math.max(26, w / 26)));
+    flakes = [];
+    for (let i=0;i<n;i++) flakes.push({
+      x: Math.random()*w, y: Math.random()*h,
+      r: 0.8 + Math.random()*2.0,
+      vy: 10 + Math.random()*22,
+      drift: 6 + Math.random()*14,
+      phase: Math.random()*Math.PI*2,
+      a: 0.25 + Math.random()*0.45
+    });
+  }
+  let snowLast = 0;
+  function drawSnow(now){
+    const [w,h] = snowSize;
+    const dt = Math.min(0.05, (now - snowLast) / 1000 || 0.016);
+    snowLast = now;
+    snowCtx.clearRect(0, 0, w, h);
+    const dark = document.documentElement.dataset.theme
+      ? document.documentElement.dataset.theme === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    snowCtx.fillStyle = dark ? "#ffffff" : "#7fa3bb";
+    for (const f of flakes){
+      f.y += f.vy * dt;
+      f.phase += dt * 1.1;
+      f.x += Math.sin(f.phase) * f.drift * dt;
+      if (f.y - f.r > h){ f.y = -f.r; f.x = Math.random()*w; }
+      if (f.x < -10) f.x = w + 10; else if (f.x > w + 10) f.x = -10;
+      snowCtx.globalAlpha = f.a;
+      snowCtx.beginPath();
+      snowCtx.arc(f.x, f.y, f.r, 0, Math.PI*2);
+      snowCtx.fill();
+    }
+    snowCtx.globalAlpha = 1;
+    snowRAF = requestAnimationFrame(drawSnow);
+  }
+  function startSnow(){
+    if (snowRAF !== null) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    sizeSnow(); if (!flakes.length) seedSnow();
+    snowLast = performance.now();
+    snowRAF = requestAnimationFrame(drawSnow);
+  }
+  function stopSnow(){
+    if (snowRAF !== null){ cancelAnimationFrame(snowRAF); snowRAF = null; }
+    snowCtx.clearRect(0, 0, snowSize[0], snowSize[1]);
+  }
+  window.addEventListener("resize", () => { if (snowRAF !== null){ sizeSnow(); seedSnow(); } });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) stopSnow();
+    else if (isXmas()) startSnow();
+  });
+
   /* ---------- theme ---------- */
   const themeBtn = document.getElementById("theme");
   const prefersDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -884,6 +1525,7 @@
   syncThemeLabel();
 
   /* ---------- go ---------- */
+  applyStyle();   // after the favicon and snow helpers exist, not before
   if (!restore()) demo("busy"); else paint();
   window.addEventListener("beforeunload", () => { if (playing) stopPlay(false); });
 })();
