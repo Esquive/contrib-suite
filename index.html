@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contrib Suite</title>
+<meta name="description" content="Your GitHub contribution graph, played as music. Paste a profile URL and hear your last twelve months as a slow pentatonic piece — one week per bar, Sunday on top.">
+<meta name="author" content="Eric Falk">
+<meta name="theme-color" content="#eef3ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141b1f" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://esquive.github.io/contrib-suite/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Contrib Suite">
+<meta property="og:url" content="https://esquive.github.io/contrib-suite/">
+<meta property="og:title" content="Contrib Suite — a contribution graph, played as music">
+<meta property="og:description" content="A contribution graph is already a piano roll: seven rows, read left to right, intensity baked in. Paste a GitHub profile URL and hear your year.">
+<meta property="og:image" content="https://esquive.github.io/contrib-suite/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The words Contrib Suite above a GitHub-style grid of green squares, with a playhead sweeping through it and three musical notes drifting up.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Contrib Suite — a contribution graph, played as music">
+<meta name="twitter:description" content="A contribution graph is already a piano roll: seven rows, read left to right, intensity baked in. Paste a GitHub profile URL and hear your year.">
+<meta name="twitter:image" content="https://esquive.github.io/contrib-suite/og.png">
+<meta name="twitter:image:alt" content="The words Contrib Suite above a GitHub-style grid of green squares with a playhead sweeping through it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<style>
+  :root{
+    color-scheme: light;
+    --paper:#eef3ea; --sky:#dde9f0; --card:#f8fbf6; --ink:#23312c; --muted:#6d8179; --line:#cfdcd2;
+    --leaf-0:#dde6da; --leaf-1:#b6d6ae; --leaf-2:#7fbd80; --leaf-3:#4e9a60; --leaf-4:#2f7347;
+    --lamp:#e8a33d; --dusk:#4a6fa5; --warn:#c2593f; --onleaf:#ffffff;
+    --shadow: 0 1px 0 rgba(35,49,44,.06);
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --paper:#141b1f; --sky:#18232a; --card:#1b2429; --ink:#e6ece6; --muted:#8ea39a; --line:#2c393f;
+      --leaf-0:#232e33; --leaf-1:#2f5a46; --leaf-2:#45865d; --leaf-3:#64b27b; --leaf-4:#9bdca3;
+      --lamp:#f0bd62; --dusk:#89aee0; --warn:#e8846a; --onleaf:#0f1a16;
+      --shadow: 0 1px 0 rgba(0,0,0,.25);
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --paper:#141b1f; --sky:#18232a; --card:#1b2429; --ink:#e6ece6; --muted:#8ea39a; --line:#2c393f;
+    --leaf-0:#232e33; --leaf-1:#2f5a46; --leaf-2:#45865d; --leaf-3:#64b27b; --leaf-4:#9bdca3;
+    --lamp:#f0bd62; --dusk:#89aee0; --warn:#e8846a; --onleaf:#0f1a16;
+    --shadow: 0 1px 0 rgba(0,0,0,.25);
+  }
+  *,*::before,*::after{ box-sizing: inherit; }
+  html,body{ margin:0; }
+  html{ scroll-padding-top: env(safe-area-inset-top, 0px); }
+  body{
+    background: radial-gradient(120% 60% at 50% 0%, var(--sky) 0%, var(--paper) 62%) fixed;
+    color: var(--ink);
+    font-family: "Zen Maru Gothic", ui-rounded, "Hiragino Maru Gothic ProN", "Segoe UI", system-ui, sans-serif;
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap{ max-width: 1020px; margin: 0 auto; padding: 28px 18px 64px; }
+
+  header.masthead{ display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+  .wordmark{ font-size: clamp(30px, 6vw, 48px); font-weight:700; line-height:1; margin:0; letter-spacing:.005em; }
+  .wordmark em{ font-style:normal; color: var(--leaf-3); }
+  .tagline{ margin:.55em 0 0; font-size:15px; color:var(--muted); max-width:46ch; }
+  .themebtn{ border:1px solid var(--line); background:var(--card); color:var(--muted); border-radius:999px; padding:6px 13px; font:inherit; font-size:13px; cursor:pointer; }
+  .themebtn:hover{ color:var(--ink); }
+
+  .stage{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 14px 14px; box-shadow:var(--shadow); }
+  .scroller{ overflow-x:auto; overflow-y:hidden; padding-bottom:6px; scrollbar-width:thin; }
+  .scroller.painting{ touch-action:none; }
+  .calendar{ display:inline-block; min-width:100%; --cell:13px; --gap:3px; --daycol:26px; }
+  @media (max-width:760px){ .calendar{ --cell:11px; --gap:2px; --daycol:22px; } }
+  .months{ display:grid; grid-auto-flow:column; grid-auto-columns:var(--cell); gap:var(--gap);
+           margin-left:calc(var(--daycol) + var(--gap)); margin-bottom:5px; font-size:11px; color:var(--muted); height:14px; }
+  .months span{ white-space:nowrap; }
+  .gridrow{ display:flex; gap:var(--gap); }
+  .days{ display:grid; grid-template-rows:repeat(7, var(--cell)); gap:var(--gap); width:var(--daycol); font-size:10px; color:var(--muted); }
+  .days i{ font-style:normal; line-height:var(--cell); }
+  .grid{ display:grid; grid-template-rows:repeat(7, var(--cell)); grid-auto-flow:column; grid-auto-columns:var(--cell); gap:var(--gap); }
+  .cell{ width:var(--cell); height:var(--cell); border-radius:3px; background:var(--leaf-0); cursor:crosshair;
+         transition: transform .09s ease, box-shadow .25s ease, background-color .2s ease; }
+  .cell[data-l="1"]{ background:var(--leaf-1); }
+  .cell[data-l="2"]{ background:var(--leaf-2); }
+  .cell[data-l="3"]{ background:var(--leaf-3); }
+  .cell[data-l="4"]{ background:var(--leaf-4); }
+  .cell.future{ opacity:.45; }
+  .cell.edited{ box-shadow: inset 0 0 0 1.5px var(--lamp); }
+  .cell.ring{ transform:scale(1.5); box-shadow:0 0 0 2px var(--lamp), 0 0 14px 3px color-mix(in srgb, var(--lamp) 55%, transparent); }
+  .cell.edited.ring{ box-shadow: inset 0 0 0 1.5px var(--lamp), 0 0 0 2px var(--lamp), 0 0 14px 3px color-mix(in srgb, var(--lamp) 55%, transparent); }
+  .cell.col-now{ outline:1px solid color-mix(in srgb, var(--lamp) 70%, transparent); outline-offset:1px; }
+  .legend{ display:flex; align-items:center; gap:8px; justify-content:flex-end; font-size:12px; color:var(--muted); margin-top:10px; }
+  .legend .cell{ cursor:default; }
+
+  .transport{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:18px; padding:14px 16px;
+              background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); }
+  .play{ display:inline-flex; align-items:center; gap:10px; background:var(--leaf-3); color:var(--onleaf); border:none;
+         border-radius:999px; padding:11px 22px 11px 18px; font:inherit; font-weight:700; font-size:16px; cursor:pointer; transition:background-color .15s ease; }
+  .play:hover{ background:var(--leaf-4); }
+  .play .tri{ width:0;height:0;border-left:11px solid currentColor;border-top:7px solid transparent;border-bottom:7px solid transparent; }
+  .play .sq{ width:12px;height:12px;background:currentColor;border-radius:2px; }
+  .field{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
+  .field input[type=range]{ width:104px; accent-color:var(--leaf-3); }
+  .field input[type=checkbox]{ accent-color:var(--leaf-3); }
+  .field select{ font:inherit; font-size:13px; padding:5px 8px; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .readout{ margin-left:auto; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+  .readout b{ color:var(--ink); font-weight:500; }
+
+  .panels{ display:grid; grid-template-columns:repeat(auto-fit, minmax(290px,1fr)); gap:16px; margin-top:16px; }
+  .panel{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 18px; box-shadow:var(--shadow); }
+  .panel h2{ font-size:16px; font-weight:700; margin:0 0 8px; }
+  .panel p{ margin:0 0 12px; font-size:14px; color:var(--muted); max-width:62ch; }
+  .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  button.ghost{ font:inherit; font-size:13px; padding:7px 13px; border-radius:999px; cursor:pointer; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  button.ghost:hover{ border-color:var(--leaf-2); }
+  button.ghost:disabled{ opacity:.5; cursor:default; }
+  button.ghost[aria-pressed="true"]{ background:var(--leaf-2); border-color:var(--leaf-2); color:var(--onleaf); }
+  .brush{ display:flex; align-items:center; gap:5px; font-size:13px; color:var(--muted); transition:opacity .15s ease; }
+  .brush.off{ opacity:.4; pointer-events:none; }
+  .swatch{ width:24px; height:24px; border-radius:7px; border:1px solid var(--line); background:var(--leaf-0); padding:0;
+           cursor:pointer; font:inherit; font-size:15px; line-height:1; color:var(--ink); }
+  .swatch[data-l="1"]{ background:var(--leaf-1); } .swatch[data-l="2"]{ background:var(--leaf-2); }
+  .swatch[data-l="3"]{ background:var(--leaf-3); } .swatch[data-l="4"]{ background:var(--leaf-4); }
+  .swatch.step{ background:var(--paper); width:28px; font-weight:700; }
+  .swatch[aria-pressed="true"]{ outline:2px solid var(--lamp); outline-offset:2px; }
+  input[type=text]{ flex:1 1 180px; min-width:150px; font:inherit; font-size:14px; padding:9px 12px; border-radius:11px;
+                    border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  input[type=text]::placeholder{ color:var(--muted); }
+  button.go{ font:inherit; font-size:14px; font-weight:700; padding:9px 18px; border-radius:11px; border:none;
+             background:var(--leaf-3); color:var(--onleaf); cursor:pointer; }
+  button.go:hover{ background:var(--leaf-4); }
+  button.go:disabled{ opacity:.55; cursor:default; }
+  details{ margin-top:14px; border-top:1px solid var(--line); padding-top:12px; }
+  summary{ cursor:pointer; font-size:13px; color:var(--muted); }
+  summary:hover{ color:var(--ink); }
+  details > *:not(summary){ margin-top:12px; }
+  a{ color:var(--dusk); }
+  textarea{ width:100%; min-height:88px; resize:vertical; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px;
+            line-height:1.5; padding:10px; border-radius:11px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  code.snippet{ display:block; white-space:pre-wrap; word-break:break-all; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+                font-size:11.5px; background:var(--paper); border:1px solid var(--line); border-radius:11px; padding:10px; color:var(--ink); margin-bottom:10px; }
+  .note{ font-size:12.5px; color:var(--muted); margin-top:10px; }
+  .status{ font-size:13px; color:var(--dusk); min-height:1.4em; margin-top:8px; }
+  .status.bad{ color:var(--warn); }
+  footer{ margin-top:28px; font-size:12.5px; color:var(--muted); }
+  footer .oneline{ text-align:center; }
+  .notices{ margin-top:18px; border-top:1px solid var(--line); padding-top:14px; }
+  .notices summary{ text-align:center; }
+  .notices h3{ font-size:13.5px; font-weight:700; color:var(--ink); margin:16px 0 4px; }
+  .notices p{ margin:0 0 8px; max-width:74ch; }
+  .notices ul{ margin:0 0 8px; padding-left:18px; }
+  .notices li{ margin-bottom:4px; }
+  :focus-visible{ outline:2px solid var(--lamp); outline-offset:2px; border-radius:6px; }
+  @media (prefers-reduced-motion: reduce){ .cell{ transition:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div>
+      <h1 class="wordmark">Contrib <em>Suite</em></h1>
+      <p class="tagline">A year of contributions, played as a slow pentatonic daydream. One week per bar, Sunday on top — and the quiet weeks hurry along.</p>
+    </div>
+    <button class="themebtn" id="theme" type="button">Night mode</button>
+  </header>
+
+  <section class="stage">
+    <div class="scroller" id="scroller">
+      <div class="calendar">
+        <div class="months" id="months"></div>
+        <div class="gridrow">
+          <div class="days"><i></i><i>Mon</i><i></i><i>Wed</i><i></i><i>Fri</i><i></i></div>
+          <div class="grid" id="grid"></div>
+        </div>
+      </div>
+    </div>
+    <div class="legend">
+      <span>quiet</span>
+      <span class="cell" data-l="0"></span><span class="cell" data-l="1"></span>
+      <span class="cell" data-l="2"></span><span class="cell" data-l="3"></span>
+      <span class="cell" data-l="4"></span>
+      <span>loud</span>
+    </div>
+  </section>
+
+  <div class="transport">
+    <button class="play" id="play" type="button"><span class="tri"></span><span>Play the year</span></button>
+    <label class="field">Tempo <input type="range" id="bpm" min="52" max="132" value="84"><span id="bpmout">84</span></label>
+    <label class="field">Key
+      <select id="key">
+        <option value="D">D major — open and hopeful</option>
+        <option value="F">F major — warm afternoon</option>
+        <option value="A">A minor — rainy</option>
+        <option value="E">E♭ major — wide sky</option>
+      </select>
+    </label>
+    <label class="field"><input type="checkbox" id="compress" checked> Hurry the quiet weeks</label>
+    <label class="field"><input type="checkbox" id="backing" checked> Backing</label>
+    <label class="field"><input type="checkbox" id="follow" checked> Follow along</label>
+    <label class="field"><input type="checkbox" id="loop"> Loop</label>
+    <span class="readout" id="readout">Ready · <b>0</b> active days</span>
+  </div>
+
+  <div class="panels">
+
+    <section class="panel">
+      <h2>Pull in a year</h2>
+      <p>Drop in your GitHub profile link and it will fetch the last twelve months of squares.</p>
+      <div class="row">
+        <input type="text" id="profile" placeholder="github.com/your-handle" autocomplete="off" spellcheck="false">
+        <button class="go" id="fetch" type="button">Load my year</button>
+      </div>
+      <div class="status" id="status"></div>
+      <details id="manual">
+        <summary>Load it by hand instead</summary>
+        <p style="margin:0">Open your profile, paste this into the browser console, then paste what it copies below. This always works, even where the live fetch is blocked.</p>
+        <code class="snippet" id="snip">copy(JSON.stringify([...document.querySelectorAll('td.ContributionCalendar-day')].map(d=>({date:d.dataset.date,level:+d.dataset.level||0})).filter(d=>d.date)))</code>
+        <div class="row"><button class="ghost" id="copysnip" type="button">Copy the console line</button><span id="profilelink"></span></div>
+        <textarea id="paste" placeholder="Paste here. Also accepts a plain list of numbers, or the GitHub GraphQL contributionCalendar JSON."></textarea>
+        <div class="row">
+          <button class="ghost" id="load" type="button">Load this pattern</button>
+          <button class="ghost" id="clear" type="button">Clear the grid</button>
+        </div>
+      </details>
+    </section>
+
+    <section class="panel">
+      <h2>Or draw one</h2>
+      <p>Turn on painting and drag across the grid. Pick a brush: step a square one shade darker or lighter, or paint a shade straight on. Anything you change keeps a gold outline until it goes back to where it started.</p>
+      <div class="row" style="margin-bottom:10px">
+        <button class="ghost" id="paintmode" type="button" aria-pressed="false">Painting is off</button>
+        <span class="brush off" id="brushbar">
+          <span>Brush</span>
+          <button class="swatch step" data-brush="lighter" type="button" title="One shade lighter" aria-pressed="false">−</button>
+          <button class="swatch step" data-brush="darker" type="button" title="One shade darker" aria-pressed="true">+</button>
+          <button class="swatch" data-brush="0" data-l="0" type="button" title="Paint empty" aria-pressed="false"></button>
+          <button class="swatch" data-brush="1" data-l="1" type="button" title="Paint shade 1" aria-pressed="false"></button>
+          <button class="swatch" data-brush="2" data-l="2" type="button" title="Paint shade 2" aria-pressed="false"></button>
+          <button class="swatch" data-brush="3" data-l="3" type="button" title="Paint shade 3" aria-pressed="false"></button>
+          <button class="swatch" data-brush="4" data-l="4" type="button" title="Paint shade 4" aria-pressed="false"></button>
+        </span>
+      </div>
+      <div class="row">
+        <button class="ghost" data-demo="busy" type="button">A busy year</button>
+        <button class="ghost" data-demo="wave" type="button">Tide</button>
+        <button class="ghost" data-demo="weekend" type="button">Weekends only</button>
+        <button class="ghost" data-demo="sparse" type="button">A few good days</button>
+        <button class="ghost" id="revert" type="button" disabled>Undo my edits</button>
+      </div>
+      <p class="note">Rows become pitch — Sunday is the highest voice, Saturday the lowest. Shade becomes loudness, and the deepest green adds a bell above the note. A busy week fills a whole bar; a week with one or two commits takes half of one; an empty week passes in a single beat. Underneath it all, a bass and a string pad keep an eight-bar progression turning without pause, so a gap in the year drifts rather than stops — and when nothing is happening up top, the pad picks out a quiet figure of its own.</p>
+    </section>
+
+    <section class="panel" id="exportpanel" hidden>
+      <h2>Keep the recording</h2>
+      <p>Records one full pass as an audio file while it plays, so the file sounds exactly like what you hear. Takes as long as the piece does.</p>
+      <div class="row">
+        <button class="ghost" id="export" type="button">Record and save</button>
+        <span class="status" id="expstatus" style="margin-top:0"></span>
+      </div>
+      <p class="note">Looping is ignored during a recording, and changing the grid mid-record will restart nothing — stop and start again instead.</p>
+    </section>
+
+  </div>
+
+  <footer>
+    <p class="oneline">Nothing leaves your browser. Every note is generated live from the grid.</p>
+
+    <details class="notices">
+      <summary>Credits, notices and the boring bits</summary>
+
+      <h3>The music is original</h3>
+      <p>No part of what Contrib Suite plays is a sample, a recording, or a transcription of an existing piece. Every note is
+      synthesised in your browser at the moment it sounds, from three ingredients: a five-note scale, an eight-bar
+      chord progression, and whatever is on the grid. Two different years produce two different pieces, and a grid
+      you draw yourself produces something nobody has heard before. The sound is written in the general idiom of
+      pentatonic film scoring — an idiom, not a particular composer’s work.</p>
+
+      <h3>Not affiliated with GitHub</h3>
+      <p>Contrib Suite is an independent hobby project. It is not affiliated with, endorsed by, sponsored by, or
+      connected to GitHub, Inc. in any way. GitHub and the GitHub logo are trademarks of GitHub, Inc., used here
+      only to describe what this tool reads.</p>
+
+      <h3>Your data stays with you</h3>
+      <p>The grid, your edits and the handle you last typed are kept in your own browser’s local storage and are sent
+      nowhere. There is no account, no analytics and no server behind this page. When you use the live fetch, your
+      request goes directly from your browser to the contributions API named below; nothing passes through us.
+      Clearing your browser’s site data for this page removes everything it has kept.</p>
+      <p>A contribution graph is public, but it is also a fairly intimate picture of how somebody spends their days.
+      Please point this at your own profile, or at one whose owner would not mind.</p>
+
+      <h3>About that console line</h3>
+      <p>The by-hand route asks you to paste one line of JavaScript into your browser’s developer console. That is,
+      in general, exactly how people get scammed, so here is precisely what this one does and nothing else: it reads
+      the date and the shade of every square already drawn on the page you are standing on, turns them into a list,
+      and puts that list on your clipboard. It sends nothing, changes nothing and signs you into nothing. The line is
+      short enough to read in full before you run it, and you should. Never run a longer one you have not read.</p>
+
+      <h3>Built on other people’s work</h3>
+      <ul>
+        <li><strong>Tone.js</strong> by Yotam Mann and contributors, used under the MIT licence, does the synthesis
+        and the scheduling. Anyone redistributing this page’s code should carry the MIT licence text along with it.</li>
+        <li><strong>Zen Maru Gothic</strong> by Yoshimichi Ohira, served by Google Fonts under the SIL Open Font
+        Licence 1.1, is the typeface.</li>
+        <li>The live fetch uses the <strong>GitHub Contributions API</strong> by Jonathan Gruber — a free,
+        unauthenticated service that somebody else pays to host. It is used here sparingly, one request per click,
+        with no automatic retries or background polling. Please be as considerate with it.</li>
+      </ul>
+
+      <h3>No promises</h3>
+      <p>This is provided as is, without warranty of any kind. Contribution levels are GitHub’s own banding and may
+      not match a raw commit count. The live fetch depends on a third-party service that may be slow, rate-limited
+      or gone. Recording plays the piece through in real time and is at the mercy of your browser; check the file
+      before you rely on it.</p>
+
+      <h3>What you make with it</h3>
+      <p>Audio generated entirely by software may not attract copyright in some jurisdictions, including the United
+      States. For a piece you render here and post somewhere, that is unlikely to matter. If it does matter to you,
+      get proper advice — none of the above is legal advice.</p>
+    </details>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const COLS = 53, ROWS = 7;
+  const levels = new Uint8Array(COLS * ROWS);
+  const base   = new Uint8Array(COLS * ROWS);
+  const cells = [];
+  const idx = (c,r) => c*ROWS + r;
+
+  /* ---------- dates ---------- */
+  const today = new Date(); today.setHours(0,0,0,0);
+  const lastSunday = new Date(today); lastSunday.setDate(today.getDate() - today.getDay());
+  const start = new Date(lastSunday); start.setDate(lastSunday.getDate() - 7*(COLS-1));
+  const dateAt = (c,r) => { const d = new Date(start); d.setDate(start.getDate() + c*7 + r); return d; };
+  const keyOf = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  const MONTH = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  /* ---------- grid ---------- */
+  const grid = document.getElementById("grid");
+  const months = document.getElementById("months");
+  const frag = document.createDocumentFragment();
+  for (let c=0;c<COLS;c++){
+    for (let r=0;r<ROWS;r++){
+      const d = dateAt(c,r);
+      const el = document.createElement("div");
+      el.className = "cell" + (d > today ? " future" : "");
+      el.dataset.l = "0"; el.dataset.c = c; el.dataset.r = r; el.title = keyOf(d);
+      frag.appendChild(el);
+      cells[idx(c,r)] = el;
+    }
+  }
+  grid.appendChild(frag);
+  let lastMonth = -1;
+  for (let c=0;c<COLS;c++){
+    const d = dateAt(c,0); const s = document.createElement("span");
+    if (d.getMonth() !== lastMonth && d.getDate() <= 7 && c < COLS-1){ s.textContent = MONTH[d.getMonth()]; lastMonth = d.getMonth(); }
+    months.appendChild(s);
+  }
+
+  let activeDays = 0, editedCount = 0;
+  const readout = document.getElementById("readout");
+  function setReadout(extra){
+    readout.innerHTML = (extra || "Ready") + " · <b>" + activeDays + "</b> active days"
+      + (editedCount ? " · <b>" + editedCount + "</b> edited" : "");
+  }
+  function refreshCell(i){
+    const el = cells[i];
+    el.dataset.l = String(levels[i]);
+    el.classList.toggle("edited", levels[i] !== base[i]);
+  }
+  function tally(){
+    activeDays = 0; editedCount = 0;
+    for (let i=0;i<levels.length;i++){ if (levels[i]) activeDays++; if (levels[i] !== base[i]) editedCount++; }
+    const rb = document.getElementById("revert");
+    if (rb){ rb.disabled = editedCount === 0; rb.textContent = editedCount ? "Undo my edits (" + editedCount + ")" : "Undo my edits"; }
+  }
+  function paint(){
+    for (let i=0;i<levels.length;i++) refreshCell(i);
+    tally(); setReadout();
+  }
+  function setBaseline(){ base.set(levels); paint(); }
+
+  /* ---------- patterns ---------- */
+  function demo(kind){
+    levels.fill(0);
+    const rnd = n => Math.random()*n;
+    for (let c=0;c<COLS;c++) for (let r=0;r<ROWS;r++){
+      const weekend = (r===0 || r===6); let v = 0;
+      if (kind === "busy"){
+        const vacation = (c>28 && c<33), sprint = (c>40 && c<46);
+        let base = weekend ? 0.22 : 0.78;
+        if (vacation) base *= 0.12;
+        if (sprint) base = Math.min(1, base*1.35);
+        if (Math.random() < base) v = 1 + Math.floor(rnd(sprint?4:3.2));
+      } else if (kind === "wave"){
+        const amp = (Math.sin(c/6.1) + 1) / 2;
+        if (Math.random() < amp*0.85) v = 1 + Math.floor(rnd(1 + amp*3));
+      } else if (kind === "weekend"){
+        if (weekend && Math.random() < 0.8) v = 2 + Math.floor(rnd(3));
+        else if (!weekend && Math.random() < 0.08) v = 1;
+      } else if (kind === "sparse"){
+        if (Math.random() < 0.13) v = 1 + Math.floor(rnd(4));
+      }
+      levels[idx(c,r)] = Math.min(4, v);
+    }
+    setBaseline(); save();
+  }
+
+  /* ---------- painting ---------- */
+  const scroller = document.getElementById("scroller");
+  const paintBtn = document.getElementById("paintmode");
+  const brushBar = document.getElementById("brushbar");
+  let painting = false, dragging = false, brushMode = "darker", touched = null;
+  paintBtn.addEventListener("click", () => {
+    painting = !painting;
+    paintBtn.setAttribute("aria-pressed", String(painting));
+    paintBtn.textContent = painting ? "Painting is on" : "Painting is off";
+    scroller.classList.toggle("painting", painting);
+    brushBar.classList.toggle("off", !painting);
+  });
+  brushBar.querySelectorAll("[data-brush]").forEach(b => b.addEventListener("click", () => {
+    brushMode = b.dataset.brush;
+    brushBar.querySelectorAll("[data-brush]").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  }));
+  function applyBrush(i){
+    const cur = levels[i];
+    let v;
+    if (brushMode === "darker") v = Math.min(4, cur + 1);
+    else if (brushMode === "lighter") v = Math.max(0, cur - 1);
+    else v = +brushMode;
+    if (v === cur) return;
+    levels[i] = v; refreshCell(i);
+  }
+  function cellFrom(e){
+    const t = document.elementFromPoint(e.clientX, e.clientY);
+    return (t && t.classList.contains("cell") && t.dataset.c !== undefined) ? t : null;
+  }
+  grid.addEventListener("pointerdown", e => {
+    if (!painting) return;
+    const el = cellFrom(e); if (!el) return;
+    e.preventDefault();
+    touched = new Set();
+    const i = idx(+el.dataset.c, +el.dataset.r);
+    touched.add(i); applyBrush(i);
+    dragging = true; grid.setPointerCapture(e.pointerId);
+  });
+  grid.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const el = cellFrom(e); if (!el) return;
+    const i = idx(+el.dataset.c, +el.dataset.r);
+    if (touched.has(i)) return;           // one step per square per stroke
+    touched.add(i); applyBrush(i);
+  });
+  function endDrag(){ if (dragging){ dragging = false; touched = null; tally(); setReadout(); save(); } }
+  grid.addEventListener("pointerup", endDrag);
+  grid.addEventListener("pointercancel", endDrag);
+
+  /* ---------- parsing ---------- */
+  function toGrid(pairs){
+    levels.fill(0);
+    const map = new Map(); let placed = 0;
+    for (let c=0;c<COLS;c++) for (let r=0;r<ROWS;r++) map.set(keyOf(dateAt(c,r)), idx(c,r));
+    for (const p of pairs){ const i = map.get(p.date); if (i !== undefined){ levels[i] = p.level; placed++; } }
+    return placed;
+  }
+  function quantise(counts){
+    const nz = counts.filter(n=>n>0).sort((a,b)=>a-b);
+    if (!nz.length) return counts.map(()=>0);
+    const q = p => nz[Math.min(nz.length-1, Math.floor(nz.length*p))];
+    const t1=q(.25), t2=q(.55), t3=q(.82);
+    return counts.map(n => n<=0?0 : n<=t1?1 : n<=t2?2 : n<=t3?3 : 4);
+  }
+  function parse(text){
+    text = text.trim();
+    if (!text) throw new Error("Nothing pasted yet.");
+    let data = null;
+    try { data = JSON.parse(text); } catch(_){}
+    if (data && !Array.isArray(data)){
+      const cal = (data.data && data.data.user && data.data.user.contributionsCollection && data.data.user.contributionsCollection.contributionCalendar)
+               || data.contributionCalendar
+               || (data.user && data.user.contributionsCollection && data.user.contributionsCollection.contributionCalendar);
+      if (cal && Array.isArray(cal.weeks)){
+        const days = cal.weeks.flatMap(w => w.contributionDays || []);
+        const lv = quantise(days.map(d => +d.contributionCount || 0));
+        return { pairs: days.map((d,i)=>({date:d.date, level:lv[i]})), kind:"GraphQL calendar" };
+      }
+      if (Array.isArray(data.contributions)) data = data.contributions;
+      else throw new Error("That JSON doesn’t look like a contribution calendar.");
+    }
+    if (Array.isArray(data) && data.length){
+      if (typeof data[0] === "object" && data[0]){
+        const hasLevel = data.some(d => d && d.level !== undefined && d.level !== null);
+        const counts = data.map(d => +(d.count != null ? d.count : (d.contributionCount || 0)) || 0);
+        const lv = hasLevel ? data.map(d => Math.max(0, Math.min(4, +d.level || 0))) : quantise(counts);
+        const pairs = data.map((d,i)=>({ date:(d.date||d.day||"").slice(0,10), level: lv[i] })).filter(p=>p.date);
+        if (!pairs.length) throw new Error("No dates found in that list.");
+        return { pairs, kind: hasLevel ? "day levels" : "day counts" };
+      }
+      if (typeof data[0] === "number") return { nums: data, kind:"number list" };
+    }
+    const nums = text.split(/[^0-9.]+/).filter(s=>s.length).map(Number).filter(n=>!isNaN(n));
+    if (nums.length < 7) throw new Error("Couldn’t find a usable pattern in that text.");
+    return { nums, kind:"number list" };
+  }
+  function loadNums(nums){
+    const max = Math.max.apply(null, nums);
+    const lv = (max > 4) ? quantise(nums) : nums.map(n=>Math.max(0,Math.min(4,Math.round(n))));
+    levels.fill(0);
+    const n = Math.min(lv.length, COLS*ROWS), offset = COLS*ROWS - n;
+    for (let k=0;k<n;k++) levels[offset+k] = lv[lv.length-n+k];
+    return n;
+  }
+
+  const statusEl = document.getElementById("status");
+  function say(msg, bad){ statusEl.textContent = msg; statusEl.classList.toggle("bad", !!bad); }
+
+  /* ---------- live fetch from a profile URL ---------- */
+  const profileEl = document.getElementById("profile");
+  const fetchBtn = document.getElementById("fetch");
+  const manual = document.getElementById("manual");
+  const profileLink = document.getElementById("profilelink");
+  const API = "https://github-contributions-api.jogruber.de/v4/";
+
+  function handleFrom(raw){
+    let t = (raw || "").trim();
+    if (!t) return "";
+    t = t.replace(/^@/, "").replace(/^https?:\/\//i, "").replace(/^www\./i, "");
+    if (/^github\.com\//i.test(t)) t = t.slice("github.com/".length);
+    t = t.split(/[?#\/]/)[0];
+    return /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/.test(t) ? t : "";
+  }
+  function showProfileLink(h){
+    profileLink.innerHTML = "";
+    if (!h) return;
+    const a = document.createElement("a");
+    a.href = "https://github.com/" + h; a.target = "_blank"; a.rel = "noopener noreferrer";
+    a.textContent = "Open github.com/" + h;
+    a.style.fontSize = "13px";
+    profileLink.appendChild(a);
+  }
+
+  async function fetchYear(){
+    const h = handleFrom(profileEl.value);
+    if (!h){ say("That doesn’t look like a GitHub profile link or handle.", true); return; }
+    try{ localStorage.setItem("contrib-suite-handle", h); }catch(_){}
+    showProfileLink(h);
+    fetchBtn.disabled = true; fetchBtn.textContent = "Fetching…";
+    say("Asking for " + h + "’s last twelve months…");
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000);
+    try{
+      const res = await fetch(API + encodeURIComponent(h) + "?y=last", { signal: ctrl.signal });
+      if (res.status === 404) throw Object.assign(new Error("no such user"), { soft:true,
+        msg: "No public contribution graph for " + h + ". Check the handle, or that the profile isn’t private." });
+      if (!res.ok) throw new Error("http " + res.status);
+      const data = await res.json();
+      const days = Array.isArray(data.contributions) ? data.contributions : null;
+      if (!days || !days.length) throw new Error("empty");
+      const placed = toGrid(days.map(d => ({ date: String(d.date).slice(0,10), level: Math.max(0, Math.min(4, +d.level || 0)) })));
+      if (!placed) throw new Error("out of range");
+      setBaseline(); save();
+      say("Loaded " + placed + " days for " + h + ". Press play.");
+      manual.open = false;
+    } catch(err){
+      if (err && err.soft){ say(err.msg, true); }
+      else {
+        say("Couldn’t reach GitHub from this page — the live fetch is blocked here. The by-hand route below works and takes about twenty seconds.", true);
+        manual.open = true;
+      }
+    } finally {
+      clearTimeout(timer);
+      fetchBtn.disabled = false; fetchBtn.textContent = "Load my year";
+    }
+  }
+  fetchBtn.addEventListener("click", fetchYear);
+  profileEl.addEventListener("keydown", e => { if (e.key === "Enter") fetchYear(); });
+  try{
+    const h = localStorage.getItem("contrib-suite-handle");
+    if (h){ profileEl.value = "github.com/" + h; showProfileLink(h); }
+  }catch(_){}
+
+  document.getElementById("load").addEventListener("click", () => {
+    try{
+      const res = parse(document.getElementById("paste").value);
+      let placed;
+      if (res.pairs){
+        placed = toGrid(res.pairs);
+        if (!placed) throw new Error("Those dates are all outside the last year, so nothing landed on the grid.");
+      } else placed = loadNums(res.nums);
+      setBaseline(); save();
+      say("Loaded " + placed + " days from your " + res.kind + ". Press play.");
+    } catch(err){ say(err.message, true); }
+  });
+  document.getElementById("clear").addEventListener("click", () => { levels.fill(0); setBaseline(); save(); say("Grid cleared."); });
+  document.getElementById("revert").addEventListener("click", () => { levels.set(base); paint(); save(); say("Your edits were undone."); });
+  document.querySelectorAll("[data-demo]").forEach(b => b.addEventListener("click", () => { demo(b.dataset.demo); say(""); }));
+  document.getElementById("copysnip").addEventListener("click", async e => {
+    try{
+      await navigator.clipboard.writeText(document.getElementById("snip").textContent);
+      e.target.textContent = "Copied"; setTimeout(()=>{ e.target.textContent = "Copy the console line"; }, 1600);
+    } catch(_){ say("Copying was blocked — select the line and copy it by hand.", true); }
+  });
+
+  /* ---------- storage ---------- */
+  function save(){
+    try{
+      localStorage.setItem("contrib-suite-v1", Array.from(levels).join(""));
+      localStorage.setItem("contrib-suite-base-v1", Array.from(base).join(""));
+    }catch(_){}
+  }
+  function restore(){
+    try{
+      const s = localStorage.getItem("contrib-suite-v1");
+      if (!s || s.length !== levels.length) return false;
+      for (let i=0;i<s.length;i++) levels[i] = +s[i] || 0;
+      const b = localStorage.getItem("contrib-suite-base-v1");
+      if (b && b.length === base.length) for (let i=0;i<b.length;i++) base[i] = +b[i] || 0;
+      else base.set(levels);
+      return true;
+    }catch(_){}
+    return false;
+  }
+
+  /* ---------- music ---------- */
+  const KEYS = {
+    D: { scale:["D4","E4","F#4","A4","B4","D5","E5"],
+         prog:[["D2",["D3","F#3","A3"]],["B1",["B3","D4","F#4"]],["G1",["G3","B3","D4"]],["A1",["A3","C#4","E4"]],
+               ["F#1",["F#3","A3","C#4"]],["B1",["B3","D4","F#4"]],["G1",["G3","B3","D4"]],["A1",["A3","C#4","E4"]]] },
+    F: { scale:["F4","G4","A4","C5","D5","F5","G5"],
+         prog:[["F2",["F3","A3","C4"]],["D2",["D3","F3","A3"]],["A#1",["A#2","D3","F3"]],["C2",["C3","E3","G3"]],
+               ["A1",["A2","C3","E3"]],["D2",["D3","F3","A3"]],["A#1",["A#2","D3","F3"]],["C2",["C3","E3","G3"]]] },
+    A: { scale:["A3","C4","D4","E4","G4","A4","C5"],
+         prog:[["A1",["A2","C3","E3"]],["F1",["F2","A2","C3"]],["C2",["C3","E3","G3"]],["G1",["G2","B2","D3"]],
+               ["D2",["D3","F3","A3"]],["F1",["F2","A2","C3"]],["E2",["E3","G3","B3"]],["E2",["E3","G#3","B3"]]] },
+    E: { scale:["D#4","F4","G4","A#4","C5","D#5","F5"],
+         prog:[["D#2",["D#3","G3","A#3"]],["C2",["C3","D#3","G3"]],["G#1",["G#2","C3","D#3"]],["A#1",["A#2","D3","F3"]],
+               ["G1",["G2","A#2","D3"]],["C2",["C3","D#3","G3"]],["G#1",["G#2","C3","D#3"]],["A#1",["A#2","D3","F3"]]] }
+  };
+  const VEL = [0, .20, .32, .46, .62];
+  const up = n => { const m = /^([A-G]#?)(\d)$/.exec(n); return m ? m[1] + (+m[2] + 1) : n; };
+
+  let audio = null;
+  function buildAudio(){
+    if (audio) return audio;
+    const out = new Tone.Volume(-3).toDestination();
+    const reverb = new Tone.Reverb({ decay:5.5, preDelay:0.03, wet:0.34 }).connect(out);
+    const chorus = new Tone.Chorus(0.5, 3.2, 0.35).start().connect(reverb);
+    const voice = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"triangle"}, envelope:{attack:0.006, decay:1.25, sustain:0.04, release:1.7} }).connect(reverb);
+    voice.volume.value = -10;
+    const bell = new Tone.PolySynth(Tone.FMSynth, { harmonicity:3.01, modulationIndex:7,
+      envelope:{attack:0.002, decay:1.8, sustain:0, release:1.4}, modulationEnvelope:{attack:0.002, decay:0.25, sustain:0, release:0.2} }).connect(reverb);
+    bell.volume.value = -22;
+    const pad = new Tone.PolySynth(Tone.Synth, { oscillator:{type:"sine"}, envelope:{attack:1.0, decay:0.6, sustain:0.65, release:3.0} }).connect(chorus);
+    pad.volume.value = -23;
+    const bass = new Tone.Synth({ oscillator:{type:"sine"}, envelope:{attack:0.03, decay:0.7, sustain:0.25, release:1.3} }).connect(reverb);
+    bass.volume.value = -15;
+    audio = { out, voice, bell, pad, bass };
+    return audio;
+  }
+
+  /* ---------- the plan: variable bar lengths ---------- */
+  const compressEl = document.getElementById("compress");
+  const backingEl = document.getElementById("backing");
+  const followEl = document.getElementById("follow");
+  const loopEl = document.getElementById("loop");
+  const bpmEl = document.getElementById("bpm"), bpmOut = document.getElementById("bpmout");
+  const keyEl = document.getElementById("key");
+
+  function buildPlan(){
+    const PPQ = Tone.Transport.PPQ, BAR = 4 * PPQ;
+    const compress = compressEl.checked;
+    const plan = []; let ticks = 0;
+    for (let c=0;c<COLS;c++){
+      const rows = [];
+      for (let r=ROWS-1;r>=0;r--) if (levels[idx(c,r)]) rows.push(r); // bottom up, so weeks rise
+      const n = rows.length;
+      const beats = !compress ? 4 : (n === 0 ? 1 : Math.min(4, Math.max(2, Math.ceil((n+1)/2))));
+      plan.push({ c, rows, startTicks: ticks, beats, wide: n <= 3 });
+      ticks += beats * PPQ;
+    }
+    // The harmony runs on its own unbroken four-beat grid, so the weeks
+    // float over it however fast they go by.
+    const totalBars = Math.max(1, Math.ceil(ticks / BAR));
+    const spans = plan.filter(p => p.rows.length).map(p => [p.startTicks, p.startTicks + p.beats*PPQ]);
+    const bars = [];
+    for (let b=0; b<totalBars; b++){
+      const s = b*BAR, e = s + BAR;
+      bars.push({ i:b, startTicks:s, busy: spans.some(sp => sp[0] < e && sp[1] > s) });
+    }
+    return { plan, bars, loopTicks: totalBars * BAR };
+  }
+
+  const OSTINATO = [[0,0],[1,1],[1.75,2],[2.5,1],[3.25,2]];
+  function playBar(bar, time){
+    const a = audio, K = KEYS[keyEl.value];
+    const beat = 60 / Tone.Transport.bpm.value;
+    const chord = K.prog[bar.i % K.prog.length];
+    a.pad.triggerAttackRelease(chord[1], beat * 3.9, time, 0.27);
+    a.bass.triggerAttackRelease(chord[0], beat * 2.3, time + 0.01, 0.5);
+    a.bass.triggerAttackRelease(chord[0], beat * 1.4, time + beat * 2.5, 0.3);
+    if (bar.busy) return;
+    // nothing on the grid here, so the backing carries the tune
+    const tones = chord[1].map(up), roll = bar.i % 3;
+    OSTINATO.forEach(([at, which], k) => {
+      if (roll === 2 && k === 2) return;
+      a.voice.triggerAttackRelease(tones[(which + roll) % tones.length], "8n",
+        time + at*beat + (Math.random()-0.5)*0.012, 0.15 + Math.random()*0.04);
+    });
+  }
+
+  function playColumn(p, time){
+    const a = audio, K = KEYS[keyEl.value];
+    const beatSec = 60 / Tone.Transport.bpm.value;
+    const step = beatSec * (p.wide ? 0.5 : 0.25);
+
+    p.rows.forEach((r, k) => {
+      const lv = levels[idx(p.c, r)];
+      const t = time + k*step + (Math.random()-0.5)*0.014;
+      const note = K.scale[ROWS - 1 - r];
+      const vel = Math.min(0.95, VEL[lv] * (0.88 + Math.random()*0.24));
+      a.voice.triggerAttackRelease(note, lv >= 3 ? "4n" : "8n", t, vel);
+      if (lv === 4) a.bell.triggerAttackRelease(up(note), "2n", t + 0.005, 0.45);
+      const el = cells[idx(p.c, r)];
+      Tone.Draw.schedule(() => { el.classList.add("ring"); setTimeout(()=>el.classList.remove("ring"), 320); }, t);
+    });
+
+    Tone.Draw.schedule(() => {
+      document.querySelectorAll(".cell.col-now").forEach(e => e.classList.remove("col-now"));
+      for (let r=0;r<ROWS;r++) cells[idx(p.c, r)].classList.add("col-now");
+      const d = dateAt(p.c, 0);
+      setReadout((recording ? "Recording · " : "") + "Week of " + MONTH[d.getMonth()] + " " + d.getDate() + " · bar " + (p.c+1) + "/" + COLS);
+      if (followEl.checked) followTo(p.c);
+    }, time);
+  }
+
+  function followTo(c){
+    const total = grid.scrollWidth || grid.getBoundingClientRect().width;
+    const colW = total / COLS;
+    const target = Math.max(0, Math.min(scroller.scrollWidth - scroller.clientWidth, c*colW - scroller.clientWidth*0.38));
+    scroller.scrollTo({ left: target, behavior: "smooth" });
+  }
+
+  /* ---------- transport ---------- */
+  let playing = false, recording = false;
+  const playBtn = document.getElementById("play");
+
+  function clearMarks(){ document.querySelectorAll(".cell.ring,.cell.col-now").forEach(e => e.classList.remove("ring","col-now")); }
+  function setPlayBtn(on){
+    playBtn.innerHTML = on ? '<span class="sq"></span><span>Stop</span>' : '<span class="tri"></span><span>Play the year</span>';
+  }
+
+  async function startPlay(opts){
+    opts = opts || {};
+    await Tone.start();
+    buildAudio();
+    Tone.Transport.stop(); Tone.Transport.cancel(); Tone.Transport.loop = false;
+    Tone.Transport.bpm.value = +bpmEl.value;
+
+    const { plan, bars, loopTicks } = buildPlan();
+    plan.forEach(p => Tone.Transport.schedule(time => playColumn(p, time), p.startTicks + "i"));
+    if (backingEl.checked) bars.forEach(b => Tone.Transport.schedule(time => playBar(b, time), b.startTicks + "i"));
+
+    const looping = !opts.noLoop && loopEl.checked;
+    if (looping){
+      Tone.Transport.loopStart = 0;
+      Tone.Transport.loopEnd = loopTicks + "i";
+      Tone.Transport.loop = true;
+    } else {
+      const tailSec = 4;
+      Tone.Transport.schedule(time => {
+        Tone.Draw.schedule(() => { if (opts.onEnd) opts.onEnd(); else stopPlay(true); }, time);
+      }, Tone.Ticks(loopTicks).toSeconds() + tailSec);
+    }
+    playing = true; setPlayBtn(true);
+    Tone.Transport.start("+0.15");
+  }
+
+  function stopPlay(finished){
+    playing = false;
+    Tone.Transport.stop(); Tone.Transport.cancel(); Tone.Transport.loop = false;
+    if (audio){ audio.voice.releaseAll(); audio.pad.releaseAll(); audio.bell.releaseAll(); audio.bass.triggerRelease(); }
+    clearMarks(); setPlayBtn(false);
+    if (!recording) setReadout(finished ? "That’s the whole year" : "Stopped");
+  }
+
+  playBtn.addEventListener("click", () => {
+    if (recording) return;
+    playing ? stopPlay(false) : startPlay();
+  });
+  bpmEl.addEventListener("input", () => {
+    bpmOut.textContent = bpmEl.value;
+    if (playing) Tone.Transport.bpm.rampTo(+bpmEl.value, 0.3);
+  });
+  [compressEl, backingEl].forEach(el => el.addEventListener("change", () => { if (playing){ stopPlay(false); startPlay(); } }));
+
+  /* ---------- export ---------- */
+  const exportPanel = document.getElementById("exportpanel");
+  const exportBtn = document.getElementById("export");
+  const expStatus = document.getElementById("expstatus");
+  let downloads = null;
+
+  function expSay(msg, bad){ expStatus.textContent = msg || ""; expStatus.classList.toggle("bad", !!bad); }
+
+  async function setUpExport(){
+    if (!window.claude || typeof window.claude.use !== "function") return;
+    if (typeof Tone.Recorder === "undefined" || !Tone.Recorder.supported) return;
+    try { downloads = await window.claude.use("downloads"); } catch(_) { downloads = null; }
+    if (downloads) exportPanel.hidden = false;
+  }
+  setUpExport();
+
+  exportBtn.addEventListener("click", async () => {
+    if (recording) return;
+    if (playing) stopPlay(false);
+    if (!activeDays){ expSay("The grid is empty — there would be nothing to record.", true); return; }
+
+    await Tone.start();
+    const a = buildAudio();
+    let recorder;
+    try { recorder = new Tone.Recorder(); } catch(e){ expSay("Recording isn’t available in this browser.", true); return; }
+    a.out.connect(recorder);
+
+    recording = true;
+    exportBtn.disabled = true;
+    exportBtn.textContent = "Recording…";
+    expSay("Playing it through once. Leave this tab open.");
+    const t0 = Date.now();
+    const ticker = setInterval(() => {
+      const s = Math.floor((Date.now()-t0)/1000);
+      exportBtn.textContent = "Recording… " + String(Math.floor(s/60)) + ":" + String(s%60).padStart(2,"0");
+    }, 500);
+
+    const finish = async () => {
+      clearInterval(ticker);
+      stopPlay(true);
+      let blob = null;
+      try { blob = await recorder.stop(); } catch(_){}
+      try { a.out.disconnect(recorder); } catch(_){}
+      try { recorder.dispose(); } catch(_){}
+      recording = false;
+      exportBtn.disabled = false;
+      exportBtn.textContent = "Record and save";
+      if (!blob || !blob.size){ expSay("The recording came back empty. Try once more.", true); return; }
+      const ext = (blob.type && blob.type.indexOf("mp4") > -1) ? "mp4" : "webm";
+      expSay("Saving " + (blob.size/1048576).toFixed(1) + " MB…");
+      try {
+        await downloads.save({ filename: "contrib-suite." + ext, data: blob });
+        expSay("Saved.");
+      } catch(err){
+        const code = err && err.code;
+        if (code === "declined") expSay("Save cancelled.");
+        else expSay("Couldn’t save that file" + (err && err.message ? ": " + err.message : "."), true);
+      }
+    };
+
+    try { await recorder.start(); } catch(e){ clearInterval(ticker); recording = false; exportBtn.disabled = false; exportBtn.textContent = "Record and save"; expSay("Recording couldn’t start.", true); return; }
+    startPlay({ noLoop: true, onEnd: finish });
+  });
+
+  /* ---------- theme ---------- */
+  const themeBtn = document.getElementById("theme");
+  const prefersDark = () => window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const isDark = () => document.documentElement.dataset.theme ? document.documentElement.dataset.theme === "dark" : prefersDark();
+  function syncThemeLabel(){ themeBtn.textContent = isDark() ? "Day mode" : "Night mode"; }
+  themeBtn.addEventListener("click", () => {
+    document.documentElement.dataset.theme = isDark() ? "light" : "dark";
+    syncThemeLabel();
+    try{ localStorage.setItem("contrib-suite-theme", document.documentElement.dataset.theme); }catch(_){}
+  });
+  try{ const t = localStorage.getItem("contrib-suite-theme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; }catch(_){}
+  syncThemeLabel();
+
+  /* ---------- go ---------- */
+  if (!restore()) demo("busy"); else paint();
+  window.addEventListener("beforeunload", () => { if (playing) stopPlay(false); });
+})();
+</script>
+</body>
+</html>
