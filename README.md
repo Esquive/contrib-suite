@@ -41,7 +41,7 @@ Then open http://localhost:8000. Opening `index.html` directly off the filesyste
 
 ## Deploying
 
-It is a single static file. Push it, then **Settings → Pages → Deploy from a branch → `main` / `/ (root)`**. No Actions workflow required.
+It is one HTML file plus a handful of icons and the social card. Push them, then **Settings → Pages → Deploy from a branch → `main` / `/ (root)`**. No Actions workflow required.
 
 ## Built with
 

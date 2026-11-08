@@ -9,7 +9,11 @@
 <meta name="theme-color" content="#eef3ea" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#141b1f" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://esquive.github.io/contrib-suite/">
-<link rel="icon" id="favicon" href="data:,">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" id="fav32" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" id="fav16" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="icon" id="favsvg" type="image/svg+xml" href="data:,">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Contrib Suite">
@@ -176,7 +180,16 @@
   .field{ display:flex; align-items:center; gap:8px; font-size:13px; color:var(--muted); }
   .field input[type=range]{ width:104px; accent-color:var(--leaf-3); }
   .field input[type=checkbox]{ accent-color:var(--leaf-3); }
-  .field select{ font:inherit; font-size:13px; padding:5px 8px; border-radius:9px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  .field select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    font:inherit; font-size:13px; line-height:1.3;
+    padding:6px 28px 6px 10px; border-radius:9px;
+    border:1px solid var(--line); color:var(--ink);
+    background-color:var(--paper);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238a9a94' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 9px center; background-size:10px 6px;
+  }
+  .field select:hover{ border-color:var(--leaf-2); }
   .readout{ margin-left:auto; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
   .readout b{ color:var(--ink); font-weight:500; }
 
@@ -1370,10 +1383,14 @@
   function expSay(msg, bad){ expStatus.textContent = msg || ""; expStatus.classList.toggle("bad", !!bad); }
 
   async function setUpExport(){
-    if (!window.claude || typeof window.claude.use !== "function") return;
     if (typeof Tone.Recorder === "undefined" || !Tone.Recorder.supported) return;
-    try { downloads = await window.claude.use("downloads"); } catch(_) { downloads = null; }
-    if (downloads) exportPanel.hidden = false;
+    // Inside the Claude artifact sandbox a plain download link is inert, so the
+    // host hands us a save API. Anywhere else — a normal web host, a local file
+    // — the ordinary anchor download is the right route.
+    if (window.claude && typeof window.claude.use === "function"){
+      try { downloads = await window.claude.use("downloads"); } catch(_) { downloads = null; }
+    }
+    exportPanel.hidden = false;
   }
   setUpExport();
 
@@ -1411,9 +1428,19 @@
       if (!blob || !blob.size){ expSay("The recording came back empty. Try once more.", true); return; }
       const ext = (blob.type && blob.type.indexOf("mp4") > -1) ? "mp4" : "webm";
       expSay("Saving " + (blob.size/1048576).toFixed(1) + " MB…");
+      const name = "contrib-suite." + ext;
       try {
-        await downloads.save({ filename: "contrib-suite." + ext, data: blob });
-        expSay("Saved.");
+        if (downloads){
+          await downloads.save({ filename: name, data: blob });
+          expSay("Saved.");
+        } else {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url; link.download = name;
+          document.body.appendChild(link); link.click(); link.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 15000);
+          expSay("Saved to your downloads as " + name + ".");
+        }
       } catch(err){
         const code = err && err.code;
         if (code === "declined") expSay("Save cancelled.");
@@ -1426,8 +1453,16 @@
   });
 
   /* ---------- favicon ---------- */
-  const faviconEl = document.getElementById("favicon");
+  // Real icon files, because Safari ignores SVG favicons entirely and a data
+  // URI is no use to a browser looking for /favicon.ico. The inline SVG stays
+  // as a last resort for when this page runs with no files beside it.
+  const favSvg = document.getElementById("favsvg");
+  const fav32 = document.getElementById("fav32");
+  const fav16 = document.getElementById("fav16");
   function setFavicon(festive){
+    const suffix = festive ? "-xmas" : "";
+    if (fav32) fav32.href = "favicon" + suffix + "-32.png";
+    if (fav16) fav16.href = "favicon" + suffix + "-16.png";
     const bg = festive ? "#b8372c" : "#4e9a60";
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">' +
       '<rect width="32" height="32" rx="7" fill="' + bg + '"/>' +
@@ -1442,7 +1477,7 @@
         '<rect x="13.5" y="22" width="5" height="5" rx="1.4" opacity=".7"/>' +
         '<rect x="21" y="22" width="5" height="5" rx="1.4" opacity=".9"/>' +
       '</g></svg>';
-    faviconEl.href = "data:image/svg+xml," + encodeURIComponent(svg);
+    if (favSvg) favSvg.href = "data:image/svg+xml," + encodeURIComponent(svg);
   }
 
   /* ---------- snow ---------- */
